@@ -118,6 +118,7 @@ introduzir abstrações (registry/LLM). Prova o caminho crítico determinístico
 | Uma imagem, três comandos *(se há worker)* | &lt;✓ | dois comandos se síncrono&gt; | `Dockerfile`, `compose.yaml` |
 | Observabilidade best-effort | &lt;✓&gt; | `otel.ts` |
 | Enforço em 3 camadas | &lt;parcial: branch protection pendente&gt; | `.husky/*`, `ci.yml` |
+| Camada agents/skills (new-slice/new-module/architect/matriz) | &lt;ativa — backbone; QA/reviewer + condicionais em fases futuras&gt; | `.claude/` |
 | LLM atrás de port | &lt;não plugado&gt; | — |
 
 ---
