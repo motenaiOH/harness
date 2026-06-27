@@ -131,7 +131,6 @@ A fatia só está **pronta** quando os três acima refletem o estado real.
 Hoje existem de fato: a **matriz** (`.claude/convocation-matrix.md`), o agente
 **`architect`**, os agentes **`qa`** e **`harness-reviewer`** e a skill **`new-module`**.
 As demais lentes (Produto, Dados, SRE/DevSecOps, UI/UX, Pesquisador) são **fase futura**.
-Sempre que a
-triagem propuser uma lente que ainda não existe, **anote "lente X pendente (fase futura)"
+Sempre que a triagem propuser uma lente que ainda não existe, **anote "lente X pendente (fase futura)"
 no plano e SIGA — sem travar**. A ausência de um papel **nunca** bloqueia a fatia; ela
 vira uma nota explícita e o cuidado manual cobre o essencial até o papel nascer.
