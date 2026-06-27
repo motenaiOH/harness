@@ -1,0 +1,59 @@
+# Observability overlay — the canonical "overlay PATCHES the delta, never forks
+# the base" example. It adds ONE all-in-one telemetry container (gated behind a
+# compose profile so it's opt-in) and injects OTEL_EXPORTER_OTLP_ENDPOINT into the
+# SAME app services declared in compose.yaml. With the endpoint absent (base
+# stack), the OTel SDK no-ops; with it present here, telemetry flows. Telemetry
+# never gates startup.
+#
+# Usage:
+#   docker compose -f compose.yaml -f compose.observability.yaml \
+#     --profile observability up -d --wait
+#   Grafana UI: http://localhost:3030  (traces/metrics/logs auto-wired)
+#
+# Dev uses the all-in-one grafana/otel-lgtm image (Grafana + Tempo + Loki +
+# Prometheus + an OTLP collector in one container) ON PURPOSE — a production
+# split-collector topology is documented as reference under observability/, not
+# mounted here.
+services:
+  otel-lgtm:
+    image: grafana/otel-lgtm:latest
+    profiles: ["observability"]
+    ports:
+      - "3030:3000" # Grafana
+      - "4317:4317" # OTLP gRPC
+      - "4318:4318" # OTLP HTTP
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Viewer"
+      GF_SECURITY_ALLOW_EMBEDDING: "true"
+    volumes:
+      - lgtmdata:/data
+      # App-specific dashboard-as-code, provisioned alongside otel-lgtm's built-ins.
+      - ./observability/grafana/dashboards:/var/lib/grafana/app-dashboards:ro
+      - ./observability/grafana/provisioning/dashboards/app.yaml:/otel-lgtm/grafana/conf/provisioning/dashboards/app.yaml:ro
+
+  # Point the apps at the in-cluster collector when telemetry is enabled.
+  api:
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-lgtm:4318
+    depends_on:
+      otel-lgtm:
+        condition: service_started
+
+  worker:
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-lgtm:4318
+    depends_on:
+      otel-lgtm:
+        condition: service_started
+
+  web:
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-lgtm:4318
+      GRAFANA_URL: http://localhost:3030
+    depends_on:
+      otel-lgtm:
+        condition: service_started
+
+volumes:
+  lgtmdata:

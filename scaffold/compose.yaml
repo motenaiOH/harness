@@ -1,0 +1,210 @@
+# Base Docker Compose — the single source of truth for the local/CI stack.
+# Overlays (compose.observability.yaml, compose.external.yaml) PATCH the delta
+# via `-f`; they never fork this file.
+#
+# Key patterns demonstrated here:
+#   * ONE image, THREE commands: the same backend image runs as `dist/main.js`
+#     (api), `dist/worker.js` (worker), and `dist/migrate.js` (one-shot migrate),
+#     differentiated only by `command:`. Build provenance + deps are identical.
+#   * Schema-before-workload by ORDERING, not hope: `migrate` is restart:"no" and
+#     every workload depends_on it with condition:service_completed_successfully.
+#   * Every infra service declares a healthcheck so `up -d --wait` means the whole
+#     stack is actually ready — which is what e2e relies on.
+#   * `${VAR:-default}` interpolation: secure-ish dev defaults, overridable by .env.
+name: app
+
+services:
+  # ───────────────────────── Infra ─────────────────────────
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-app}
+      POSTGRES_DB: ${POSTGRES_DB:-app}
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test:
+        ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-app} -d ${POSTGRES_DB:-app}"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:-app}"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-app}", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+    volumes:
+      - redisdata:/data
+
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-app}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-app}
+    ports:
+      - "5672:5672"
+      - "15672:15672" # management UI
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+    volumes:
+      - rabbitmqdata:/var/lib/rabbitmq
+
+  # ──────────────────── DB migration (one-shot) ────────────────────
+  # The write-path app NEVER runs migrations inline. Schema changes are a separate
+  # unit that MUST complete before any workload starts. restart:"no" + the
+  # service_completed_successfully condition on every dependent enforces ordering.
+  # NOTE: the migrate command is intentionally `node dist/migrate.js` with NO
+  # `--require ./dist/otel.js` — keep the one-shot's footprint minimal.
+  migrate:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    command: ["node", "dist/migrate.js"]
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-app}@postgres:5432/${POSTGRES_DB:-app}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  # ──────────────────── Demo seed (one-shot) ────────────────────
+  # Idempotent seed of the demo user/data. Same image, alternate command, gated
+  # AFTER migrate. Generalized: replace dist/seed.js with your own seed entrypoint
+  # or remove this service entirely if you have nothing to seed.
+  seed:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    command: ["node", "dist/seed.js"]
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-app}@postgres:5432/${POSTGRES_DB:-app}
+      DEMO_USER_EMAIL: ${DEMO_USER_EMAIL:-demo@app.dev}
+      DEMO_USER_PASSWORD: ${DEMO_USER_PASSWORD:-demo1234}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: "no"
+
+  # ───────────────────────── Apps ─────────────────────────
+  # api = role 1 of the shared image. The write endpoint validates, generates the
+  # id, publishes a durable event, and returns immediately WITHOUT touching the
+  # domain DB on the write path — persistence is async in the worker.
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    command: ["node", "--require", "./dist/otel.js", "dist/main.js"]
+    environment:
+      NODE_ENV: production
+      PORT: "3001"
+      DATABASE_URL: postgres://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-app}@postgres:5432/${POSTGRES_DB:-app}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-app}@redis:6379
+      RABBITMQ_URI: amqp://${RABBITMQ_DEFAULT_USER:-app}:${RABBITMQ_DEFAULT_PASS:-app}@rabbitmq:5672
+      # Shared HS256 secret the web app mints with and the API verifies (iss/aud pinned).
+      AUTH_API_SECRET: ${AUTH_API_SECRET}
+      JWT_ISSUER: ${JWT_ISSUER:-app-web}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-app-api}
+      # AES-256-GCM key for any encrypted-settings vault (base64 of 32 bytes).
+      SETTINGS_SECRET_KEY: ${SETTINGS_SECRET_KEY}
+      # CORS is an explicit allowlist (a denylist always forgets something).
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      # Rate-limit ceiling. The whole e2e suite drives traffic from one IP, so the
+      # secure prod default (100/60 s) would trip on normal fan-out. Real prod sets
+      # this via its own deploy config; unset falls back to the secure default.
+      THROTTLE_LIMIT: ${THROTTLE_LIMIT:-2000}
+      THROTTLE_LOGIN_LIMIT: ${THROTTLE_LOGIN_LIMIT:-100}
+      OTEL_SERVICE_NAME: app-api
+      # Telemetry is best-effort: empty endpoint => the OTel SDK no-ops. CI stays green.
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      # AI/LLM is deterministic-first and behind a port. Leave the key empty for
+      # keyless/CI: the gateway no-ops into a deterministic fallback. The critical
+      # path works without an LLM; the LLM only "explains", never "decides".
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_PROVIDER: ${LLM_PROVIDER:-none}
+      LLM_MODEL: ${LLM_MODEL:-}
+      LLM_MAX_TOKENS: ${LLM_MAX_TOKENS:-256}
+      LLM_TIMEOUT_MS: ${LLM_TIMEOUT_MS:-10000}
+    ports:
+      - "3001:3001"
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      seed:
+        condition: service_completed_successfully
+
+  # worker = role 2 of the SAME image. Standalone consumer: pulls events off the
+  # broker and does an idempotent INSERT ... ON CONFLICT DO NOTHING keyed on the
+  # producer-generated id. At-least-once delivery is safe because dedup lives in
+  # the consumer, never the broker. No HTTP port, no Service.
+  worker:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    command: ["node", "--require", "./dist/otel.js", "dist/worker.js"]
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-app}@postgres:5432/${POSTGRES_DB:-app}
+      RABBITMQ_URI: amqp://${RABBITMQ_DEFAULT_USER:-app}:${RABBITMQ_DEFAULT_PASS:-app}@rabbitmq:5672
+      OTEL_SERVICE_NAME: app-worker
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+    restart: unless-stopped
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  # web = the Next.js frontend (standalone image). Mints the API JWT server-side
+  # and proxies to the API — the Bearer token never reaches the browser.
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: "0.0.0.0"
+      NEST_API_URL: http://api:3001
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      # AUTH_SECRET encrypts the session cookie; AUTH_API_SECRET is the shared
+      # HS256 secret with the API. Two secrets, do not conflate.
+      AUTH_SECRET: ${AUTH_SECRET}
+      AUTH_API_SECRET: ${AUTH_API_SECRET}
+      JWT_ISSUER: ${JWT_ISSUER:-app-web}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-app-api}
+      DEMO_USER_EMAIL: ${DEMO_USER_EMAIL:-demo@app.dev}
+      DEMO_USER_PASSWORD: ${DEMO_USER_PASSWORD:-demo1234}
+      OTEL_SERVICE_NAME: app-web
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      # Optional Grafana embed for an admin dashboards page. The observability
+      # overlay sets this to http://localhost:3030; empty => placeholder.
+      GRAFANA_URL: ${GRAFANA_URL:-}
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_started
+
+volumes:
+  pgdata:
+  redisdata:
+  rabbitmqdata:

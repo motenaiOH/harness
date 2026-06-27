@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Base",
+  "//": "Shared strict TypeScript base. Every package/app extends exactly ONE config from @app/tsconfig (this base directly, or a runtime variant: nestjs.json / nextjs.json / node.json / library.json) so a single change propagates everywhere instead of being copied per app. Runtime variants override ONLY what their runtime needs (module system, JSX, emit vs no-emit).",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2023"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "composite": false,
+    "//incremental": "WHY true here, but the buildable shared package (e.g. @app/contracts) MUST override this to false: with --incremental tsc writes tsconfig.tsbuildinfo OUTSIDE dist and then skips emit after dist is cleared, leaving consumers with no dist. A package that must ALWAYS emit sets incremental:false + composite:false. See packages/contracts/tsconfig.json.",
+    "incremental": true
+  },
+  "exclude": ["node_modules", "dist", ".next"]
+}

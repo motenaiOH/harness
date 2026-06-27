@@ -1,0 +1,12 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# onlyBuiltDependencies is an ALLOWLIST of packages permitted to run native
+# postinstall build steps. pnpm blocks lifecycle scripts by default (supply-chain
+# hardening); list the native deps your runtimes need (compilers, framework cores)
+# or they won't build. Everything else stays blocked for determinism + security.
+onlyBuiltDependencies:
+  - "@swc/core"
+  - esbuild
+  - "@nestjs/core"

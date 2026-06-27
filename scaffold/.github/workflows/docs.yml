@@ -1,0 +1,23 @@
+# Docs gate — path-filtered so it only runs when docs change (don't put
+# auxiliary gates in the main CI job graph). `mkdocs build --strict` fails the
+# build on a broken link/ref or a page missing from the nav: documentation is
+# code, organized by Diataxis, shipped in the same change.
+name: Docs
+
+on:
+  push:
+    branches: [main]
+    paths: ["docs/**", "mkdocs.yml"]
+  pull_request:
+    paths: ["docs/**", "mkdocs.yml"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install mkdocs-material
+      - run: mkdocs build --strict # fail on broken links/refs or pages missing from nav

@@ -1,0 +1,13 @@
+# Grafana dashboard provider for the harness.
+# Mounted into the otel-lgtm container alongside its built-in providers by
+# compose.observability.yaml. The `path` MUST match the mount target the overlay
+# uses for ./observability/grafana/dashboards (i.e. /var/lib/grafana/app-dashboards).
+apiVersion: 1
+
+providers:
+  - name: app
+    type: file
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/app-dashboards
+      foldersFromFilesStructure: false

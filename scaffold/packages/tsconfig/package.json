@@ -1,0 +1,7 @@
+{
+  "name": "@app/tsconfig",
+  "version": "0.1.0",
+  "private": true,
+  "//": "Shared TS config package. There is NO build step — it ships raw .json files that other packages reference via `extends: @app/tsconfig/<variant>.json`. The `files` array is what pnpm bundles; list every variant here so consumers can extend any of them. One layered base, specialized per runtime (nestjs/nextjs/node/library).",
+  "files": ["base.json", "nestjs.json", "nextjs.json", "node.json", "library.json"]
+}

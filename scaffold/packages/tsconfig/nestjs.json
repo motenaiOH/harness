@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "NestJS",
+  "//": "Runtime variant for the NestJS API/worker. Inherits the strict base and overrides ONLY what the Nest runtime needs. Nest ships and runs as CommonJS and is built with `nest build` (tsc under the hood), so this emits CJS.",
+  "extends": "./base.json",
+  "compilerOptions": {
+    // Nest's runtime is CommonJS (require/module.exports), so emit CJS and resolve
+    // modules the classic Node way. The base uses NodeNext (ESM-first) for libraries;
+    // a Nest app must override both together or imports break at runtime.
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+
+    // ES2023 lib/target: modern Node 22 supports it natively, no downleveling needed.
+    "target": "ES2023",
+
+    // Decorators are the backbone of Nest DI (@Injectable, @Controller, @Module).
+    // emitDecoratorMetadata feeds the reflection metadata the IoC container reads at
+    // runtime to resolve constructor params — without it, injection silently fails.
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+
+    // Nest injects dependencies via the constructor AFTER field initializers would run.
+    // useDefineForClassFields:false keeps the legacy "set" semantics so injected props
+    // aren't clobbered by `undefined`; strictPropertyInitialization:false lets DI-filled
+    // properties be declared without a definite-assignment `!`.
+    "useDefineForClassFields": false,
+    "strictPropertyInitialization": false,
+
+    // Compiled output lands in ./dist (the prod image runs node dist/main.js).
+    "outDir": "./dist",
+    "baseUrl": "./"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "//": "Prettier is invoked as the ONLY action in lint-staged (format the staged files), and separately via `pnpm format`. ESLint stays in the full `pnpm lint` gate — do not run ESLint per-staged-file (fragile config resolution). These are Prettier 3 defaults made explicit so formatting never drifts between machines.",
+  "semi": true,
+  "singleQuote": false,
+  "trailingComma": "all",
+  "printWidth": 100,
+  "tabWidth": 2
+}

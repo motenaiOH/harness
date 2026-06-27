@@ -1,0 +1,12 @@
+# <App> harness — FAST validations on EVERY commit (DoD gate, enforced by git, not by memory).
+# Layer 1 of defense-in-depth: local + bypassable. Heavier gates (coverage, audit, contract
+# drift) run on pre-push; integration/e2e/docker run only in CI (the unbypassable source of truth).
+# Emergency bypass (use sparingly — CI still enforces everything): git commit --no-verify
+set -e
+
+pnpm exec lint-staged                  # format staged files (prettier --write) and re-stage — NOT eslint
+pnpm --filter @app/contracts build     # buildable shared package MUST build before typecheck/lint (gotcha #1)
+pnpm typecheck
+pnpm lint                              # eslint with --max-warnings 0: warnings break the build
+pnpm test                              # unit + property
+pnpm eval                              # deterministic <Feature> acceptance gate

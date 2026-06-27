@@ -1,0 +1,14 @@
+{
+  "//": "Web tsconfig — the real bridge between the app and the shared @app/tsconfig package. Extends the nextjs variant (jsx preserve, noEmit, esnext/bundler, DOM lib, next plugin) and adds only app-local settings (the @/* path alias and the Next-generated type globs).",
+  "extends": "@app/tsconfig/nextjs.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    // Next requires each file to be transpilable in isolation (SWC per-file).
+    "isolatedModules": true
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules", ".next"]
+}

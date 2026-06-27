@@ -1,0 +1,18 @@
+{
+  "name": "@app/eslint-config",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "//": "Shared ESLint flat config package (ESM, hence type:module). No build step — it ships raw .mjs flat-config files. `main`/`exports` point at index.mjs (the base config); the `./node` subpath adds Node globals for backend packages. Apps depend on this via workspace:* and spread the relevant export in their own eslint.config.mjs.",
+  "main": "./index.mjs",
+  "exports": {
+    ".": "./index.mjs",
+    "./base": "./index.mjs",
+    "./node": "./node.mjs"
+  },
+  "dependencies": {
+    "@eslint/js": "^9.17.0",
+    "typescript-eslint": "^8.18.0",
+    "globals": "^15.13.0"
+  }
+}

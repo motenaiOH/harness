@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Node",
+  "//": "Runtime variant for plain Node tooling/scripts run via tsx (e.g. seed/migration helpers, eval runners). tsx executes TS directly, so tsc is typecheck-only here — noEmit. Keeps the base's NodeNext (modern ESM-first Node) module system explicit.",
+  "extends": "./base.json",
+  "compilerOptions": {
+    // Modern Node 22 ESM resolution. Made explicit (even though it matches base) so the
+    // variant's intent is self-documenting and survives a base change.
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2023",
+
+    // These scripts are executed by tsx (JIT), never compiled to dist. Run tsc only to
+    // typecheck them; emitting would produce orphan .js nobody runs.
+    "noEmit": true
+  }
+}

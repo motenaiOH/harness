@@ -1,0 +1,38 @@
+# Keep the Docker build context lean and deterministic. Anything here is NOT sent to
+# the daemon, so it can't leak into or poison an image layer.
+
+# Dependencies + build output are reinstalled/recompiled inside the image.
+**/node_modules
+**/.next
+**/dist
+**/.turbo
+
+# 🚨 CRITICAL: exclude TS incremental build state. The buildable shared package
+# (@app/contracts) pins composite:false/incremental:false so it ALWAYS emits, but a
+# STALE *.tsbuildinfo copied from the host would make tsc believe it already emitted
+# and SKIP emission inside the image — leaving an empty dist that breaks every consumer
+# in a hard-to-diagnose way. Stripping it here guarantees a clean emit in Docker.
+**/*.tsbuildinfo
+
+# Test + coverage artifacts: never needed at runtime.
+**/coverage
+**/playwright-report
+**/test-results
+**/*.test.ts
+**/*.spec.ts
+**/*.int.test.ts
+**/*.prop.test.ts
+**/*.eval.test.ts
+e2e
+
+# VCS, CI, and docs are irrelevant to the runtime image.
+.git
+.github
+docs
+terraform
+*.md
+
+# Never bake real secrets/env into an image; keep only the template.
+.env
+.env.*
+!.env.example

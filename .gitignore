@@ -1,0 +1,21 @@
+# Build artifacts / generated
+site/            # mkdocs build output
+node_modules/
+dist/
+.next/
+.turbo/
+*.tsbuildinfo
+
+# Test / coverage
+coverage/
+test-results/
+playwright-report/
+
+# Env (keep the example)
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+Thumbs.db

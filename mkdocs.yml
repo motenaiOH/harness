@@ -1,0 +1,29 @@
+# MkDocs config for the MODEL's OWN repo-resident docs (Diataxis layout).
+# This is the harness-model itself (NOT the scaffold copied into a consuming
+# project — that one lives in scaffold/mkdocs.yml). `mkdocs build --strict` is a
+# gate: a broken link or a page missing from this nav FAILS the build, so every
+# entry below MUST map to a file that exists under docs/.
+site_name: harness-model
+site_description: Reference harness template — Next.js + authenticated NestJS API + worker + observability
+docs_dir: docs
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - content.code.copy
+plugins:
+  - search
+nav:
+  - Home: index.md
+  - Tutorials:
+      - Getting started: tutorials/getting-started.md
+  - How-to:
+      - Replicate this harness: how-to/replicate-this-harness.md
+      - Current state (template): how-to/current-state.template.md
+  - Explanation:
+      - Architecture: explanation/architecture.md
+      - Escrita síncrona e opt-in assíncrono (CQRS): explanation/sync-and-async-flow.md
+  - ADRs:
+      - ADR-0000 Template: adr/0000-adr-template.md
+      - ADR-0001 Record architecture decisions: adr/0001-record-architecture-decisions.md

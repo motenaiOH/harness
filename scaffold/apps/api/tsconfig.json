@@ -1,0 +1,19 @@
+{
+  "//": "API tsconfig — the real bridge between the app and the shared @app/tsconfig package. Extends the nestjs variant (CJS emit, decorators, ES2023) and adds only app-local settings (paths, include). This config is run with `tsc --noEmit` for typechecking; `nest build` produces the prod dist.",
+  "extends": "@app/tsconfig/nestjs.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "baseUrl": "./",
+    "types": ["node"],
+
+    // Typecheck-only resolution (this config runs with --noEmit). Bundler resolution
+    // honors dependencies' "exports" maps, so packages that publish types only via
+    // "exports" resolve correctly during typecheck. The nestjs variant restores
+    // CommonJS/Node for the actual production emit done by `nest build`.
+    "module": "ESNext",
+    "moduleResolution": "Bundler"
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts", "*.config.ts"],
+  "exclude": ["node_modules", "dist"]
+}

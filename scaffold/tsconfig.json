@@ -1,0 +1,4 @@
+{
+  "//": "Thin root config for EDITOR/IDE tooling only — `files: []` means it compiles nothing. There is intentionally NO `references` array: this repo does NOT build via the TS project graph (`tsc -b`). Typecheck/compile is PER-PACKAGE, fanned out by `turbo run typecheck` / `turbo run build` — each package has its own tsconfig that `extends` a @app/tsconfig variant. WHY not `tsc -b`: the buildable shared package @app/contracts deliberately sets composite:false (so it ALWAYS emits on a clean/Docker build — see packages/contracts/tsconfig.json), and `tsc -b` requires composite:true on every referenced project, so a project-reference build would break. Turbo's dependency graph (turbo.json) handles ordering instead — it builds @app/contracts before its consumers.",
+  "files": []
+}

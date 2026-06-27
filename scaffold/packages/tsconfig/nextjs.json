@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Next.js",
+  "//": "Runtime variant for the Next.js web app. Next compiles TS itself (SWC), so tsc is used ONLY for typechecking — hence noEmit. Overrides target the browser + bundler runtime.",
+  "extends": "./base.json",
+  "compilerOptions": {
+    "target": "ES2022",
+
+    // Browser runtime needs the DOM lib (document, fetch, etc.); the base is Node-only.
+    "lib": ["DOM", "DOM.Iterable", "ES2023"],
+
+    // Next/Webpack/SWC bundles ESM and resolves via the bundler algorithm (honors the
+    // "exports" map of dependencies). esnext+bundler is the combination Next expects.
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+
+    // Next transforms JSX itself; "preserve" leaves <JSX/> intact for the bundler to handle.
+    "jsx": "preserve",
+    "allowJs": true,
+
+    // tsc is typecheck-only here (next build does the real compilation), so emit nothing.
+    // Declarations/composite are irrelevant for a leaf app that nobody imports types from.
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    "composite": false,
+    "incremental": true,
+
+    // The Next language-service plugin powers route/type intelligence in the editor.
+    "plugins": [{ "name": "next" }]
+  }
+}

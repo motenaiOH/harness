@@ -1,0 +1,166 @@
+# CI — staged pipeline that is the UNBYPASSABLE source of truth for the
+# Definition of Done. The same gates run locally in git hooks (Husky) for fast
+# feedback, but those are bypassable with --no-verify; this pipeline is not.
+#
+# Stage DAG (fail-fast, fan-out by `needs:`):
+#
+#   commitlint        static
+#                       │
+#              ┌────────┴────────┐
+#           mutation          integration
+#                                │
+#                               e2e
+#
+# `static` is a single cheap gate (no Docker) that must pass before the
+# expensive jobs run, so a doomed run wastes the fewest minutes. e2e only runs
+# after integration is green because spinning the whole compose stack is the
+# slowest step.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Non-secret test/build env. CI runs KEYLESS by design: no real API keys, no
+  # external paid deps — the deterministic fallbacks keep the pipeline cheap and
+  # reproducible. These placeholders only need to satisfy the zod boot schema.
+  AUTH_SECRET: ci-auth-secret-0000000000000000000000
+  AUTH_API_SECRET: ci-api-secret-000000000000000000000000000000
+  JWT_ISSUER: app-web
+  JWT_AUDIENCE: app-api
+
+jobs:
+  # ── Conventional Commits gate (independent) ──────────────────────────────
+  # Enforced here AND in the commit-msg hook precisely so history stays
+  # machine-readable: release-please (changelog/semver/tag) is a free
+  # consequence of a disciplined log.
+  commitlint:
+    name: Commit messages (Conventional Commits)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # need history to lint the commit range
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Validate commit messages
+        run: |
+          base="${{ github.event.pull_request.base.sha || github.event.before }}"
+          head="${{ github.event.pull_request.head.sha || github.sha }}"
+          # New branch / no base ref -> lint only the latest commit.
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
+            pnpm exec commitlint --last --verbose
+          else
+            pnpm exec commitlint --from "$base" --to "$head" --verbose
+          fi
+
+  # ── Cheap gate: gates everything below ───────────────────────────────────
+  static:
+    name: Audit · Lint · Typecheck · Unit + Property · Coverage · Eval
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+      # --frozen-lockfile: a drifted lockfile FAILS the build instead of
+      # silently resolving new versions.
+      - run: pnpm install --frozen-lockfile
+      # Audit positioned right after install to fail fast. Blocks on high/critical
+      # only — a new CVE in an existing dep can fail this with zero code change
+      # (intentional). moderate/low are recorded as documented exceptions, not blockers.
+      - run: pnpm audit --audit-level high
+      # The shared contracts package MUST be built before typecheck/lint/test —
+      # downstream packages import its compiled dist. Skipping it makes every
+      # downstream job fail to resolve types. This first step recurs in every job.
+      - run: pnpm build --filter @app/contracts
+      - run: pnpm typecheck
+      - run: pnpm lint # --max-warnings 0 in the eslint config: warnings break the build
+      - run: pnpm test # unit + property (vitest + fast-check)
+      - run: pnpm --filter @app/api test:cov # DoD: >= 80% coverage on business rules (domain + application)
+      - run: pnpm eval # deterministic <Feature> eval gate (keyless, CI-blocking)
+
+  # ── Heavy gate 1: mutation (proves tests ASSERT) ─────────────────────────
+  # Coverage proves a line executed; mutation proves the test actually asserts
+  # behavior — 100% coverage passes with empty assertions, so both gates coexist.
+  # Scoped to the business-rule layers only (domain + application + crypto) because
+  # the vitest runner only runs unit tests; mutating infra/presentation would
+  # produce false survivors only killable by integration/e2e.
+  mutation:
+    name: Mutation (Stryker)
+    runs-on: ubuntu-latest
+    needs: static
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build --filter @app/contracts
+      - run: pnpm --filter @app/api mutation # DoD: mutation score >= 90 (Stryker `break` threshold)
+      - if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: mutation-report
+          path: apps/api/reports/mutation/
+
+  # ── Heavy gate 2: integration + contract drift (Testcontainers) ──────────
+  # Real Postgres via Testcontainers for repository round-trips, PLUS the offline
+  # OpenAPI drift gate (deep-equals the regenerated doc against the committed
+  # snapshot WITHOUT opening connections). No external domain service needed.
+  integration:
+    name: Integration + Contract drift (Testcontainers)
+    runs-on: ubuntu-latest
+    needs: static
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build --filter @app/contracts
+      - run: pnpm test:int
+
+  # ── Slowest gate: e2e against the real compose stack ─────────────────────
+  # The stack is brought up here (docker compose --wait); Playwright runs against
+  # an already-up target via BASE_URL — the playwright config has NO webServer block.
+  e2e:
+    name: E2E (Playwright vs Docker stack)
+    runs-on: ubuntu-latest
+    needs: integration
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: cp .env.example .env
+      - run: docker compose up -d --build --wait
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: BASE_URL=http://localhost:3000 pnpm test:e2e
+      - if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: playwright-report/
+      - if: always()
+        run: docker compose down -v

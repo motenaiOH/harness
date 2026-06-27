@@ -1,0 +1,32 @@
+# MkDocs config for the consuming project's repo-resident docs (Diataxis layout).
+# `mkdocs build --strict` is a CI gate (.github/workflows/docs.yml): a broken link
+# or a page missing from this nav FAILS the build. Documentation lives next to
+# what it describes and links instead of copying.
+#
+# This is a STARTER nav — add a page here in the same change that adds the doc,
+# and an ADR entry under "ADRs" in the same change that records a decision. An
+# accepted ADR is never edited; a superseding ADR is created instead.
+site_name: <App> harness
+site_description: <App> — Next.js + authenticated NestJS API + worker + observability
+docs_dir: docs
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - content.code.copy
+plugins:
+  - search
+nav:
+  - Home: index.md
+  - Tutorials:
+      - Getting started: tutorials/getting-started.md
+  - How-to:
+      - Replicate this harness: how-to/replicate-this-harness.md
+      - Current state and follow-ups: how-to/current-state.md
+  - Explanation:
+      - Architecture: explanation/architecture.md
+      - Sync write-path / async persistence: explanation/sync-and-async-flow.md
+  - ADRs:
+      - ADR-0000 Template: adr/0000-adr-template.md
+      - ADR-0001 Record architecture decisions: adr/0001-record-architecture-decisions.md

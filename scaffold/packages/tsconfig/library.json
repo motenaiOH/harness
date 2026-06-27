@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Library (buildable, emits types)",
+  "//": "Variant for a shared, BUILDABLE package that other workspace packages import from its compiled dist. Emits JS + .d.ts so consumers get types. composite:true makes it a well-behaved TS project reference (faster incremental graph builds, declaration maps for go-to-definition across packages).",
+  "extends": "./base.json",
+  "compilerOptions": {
+    // Emit type declarations + maps so importing packages get full types and IDE
+    // go-to-definition jumps to the source, not the .d.ts.
+    "declaration": true,
+    "declarationMap": true,
+
+    // composite makes this a citizen of the TS project-reference graph. It implies
+    // declaration:true and a tsbuildinfo for incremental rebuilds.
+    "composite": true,
+
+    // Emit to ./dist; consumers point "main"/"exports" at dist.
+    "outDir": "./dist",
+    "rootDir": "./src",
+
+    // ⚠️ EXCEPTION: the @app/contracts package does NOT use this variant. It must
+    // ALWAYS emit on a clean build (Docker clears dist first), and composite/incremental
+    // let tsc skip emit when it finds a stale tsbuildinfo OUTSIDE dist — leaving an empty
+    // dist that breaks every consumer. So contracts extends base.json directly and pins
+    // composite:false + incremental:false. See packages/contracts/tsconfig.json and the
+    // root .dockerignore (which strips **/*.tsbuildinfo). Use THIS variant only for
+    // libraries that don't have that clean-emit constraint.
+    "incremental": true
+  },
+  "exclude": ["node_modules", "dist"]
+}

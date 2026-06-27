@@ -1,0 +1,25 @@
+{
+  "extends": "@app/tsconfig/base.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "outDir": "./dist",
+    "rootDir": "./src",
+
+    // ⚠️ composite:false / incremental:false are INTENTIONAL — do NOT "optimize"
+    // them on. With --incremental, tsc writes tsconfig.tsbuildinfo OUTSIDE dist;
+    // once dist is cleared (clean build / Docker), tsc believes it already
+    // emitted and SKIPS emission, leaving an empty dist that breaks every
+    // consumer in a hard-to-diagnose way. The base config sets incremental:true,
+    // so this override is mandatory for the package that must ALWAYS emit.
+    // The root .dockerignore also excludes **/*.tsbuildinfo so a stale local
+    // buildinfo cannot poison the Docker image.
+    "composite": false,
+    "incremental": false,
+
+    "declaration": true,
+    "declarationMap": true
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

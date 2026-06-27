@@ -1,0 +1,4 @@
+# <App> harness — enforce Conventional Commits on the message (commitlint).
+# Machine-readable history feeds changelog/semver/release-please downstream.
+# Bypass in emergencies: git commit --no-verify
+pnpm exec commitlint --edit "$1"

@@ -1,0 +1,69 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+# tsbuildinfo is excluded here AND in .dockerignore: a stale buildinfo makes tsc
+# skip emit, leaving the buildable shared package without a dist (gotcha #1).
+*.tsbuildinfo
+
+# MkDocs build output
+site/
+
+# Mutation testing (Stryker)
+.stryker-tmp/
+reports/
+
+# Database dumps — real data, never versioned (keep structure + README only)
+db/dumps/*
+!db/dumps/README.md
+!db/dumps/.gitkeep
+
+# Turbo
+.turbo/
+
+# Env — commit only the example
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Test / coverage
+coverage/
+playwright-report/
+test-results/
+.nyc_output/
+
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfvars
+!*.tfvars.example
+.terraform.lock.hcl
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Misc
+*.pem
+.cache/
+tmp/
+.playwright-mcp/
+
+# git worktrees for fan-out agents
+.claude/worktrees/

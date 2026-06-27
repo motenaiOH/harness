@@ -1,0 +1,48 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "stream",
+  "//globalEnv": "Env vars that participate in the cache key. Change one -> cache invalidates. Keep best-effort telemetry vars here so a telemetry change doesn't serve a stale build.",
+  "globalEnv": ["NODE_ENV", "OTEL_EXPORTER_OTLP_ENDPOINT", "OTEL_SERVICE_NAME"],
+  "//globalDependencies": "Files that, when changed, invalidate ALL task caches (root tsconfig + .env shape).",
+  "globalDependencies": [".env", "tsconfig.json"],
+  "tasks": {
+    "build": {
+      "//": "dependsOn ^build = wait for UPSTREAM workspace packages to build first. This is THE build-order contract: @app/contracts (the buildable shared package) must emit its dist before any consumer compiles. Build order is data here, not docs.",
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {
+      "dependsOn": ["^build"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build"],
+      "outputs": ["*.tsbuildinfo"]
+    },
+    "test": {
+      "//": "Unit + property tests. Coverage threshold is enforced inside the app's vitest config, not here.",
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"]
+    },
+    "test:int": {
+      "//": "Integration via Testcontainers — non-deterministic (real Docker), so cache:false. Whitelist DOCKER_HOST/TESTCONTAINERS_* into the env so the runner can reach the daemon.",
+      "dependsOn": ["^build"],
+      "cache": false,
+      "env": ["DOCKER_HOST", "TESTCONTAINERS_*"]
+    },
+    "eval": {
+      "//": "Domain acceptance check (deterministic today; redesign for non-determinism when a real LLM is wired behind the port). cache:false so it always runs as a gate.",
+      "dependsOn": ["^build"],
+      "cache": false
+    },
+    "db:generate": {
+      "cache": false
+    },
+    "db:migrate": {
+      "cache": false
+    }
+  }
+}

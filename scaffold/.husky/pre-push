@@ -1,0 +1,12 @@
+# <App> harness — HEAVIER DoD gates before code leaves the machine.
+# (pre-commit already ran typecheck/lint/test/eval.) Layer 1 still — bypassable;
+# CI re-runs all of this plus integration/e2e/docker as the source of truth.
+# Emergency bypass: git push --no-verify
+set -e
+
+pnpm --filter @app/contracts build
+pnpm --filter @app/api test:cov   # business-rule coverage >= 80% (build breaks below) — scope is domain+application only
+pnpm audit --audit-level high     # no high/critical advisories (can fail with NO code change when a new CVE lands)
+# Regenerate the committed API contract snapshot and fail if it drifted — stops a stale
+# openapi.json from ever reaching CI (where the offline deep-equal test would otherwise be the only catch).
+pnpm --filter @app/api openapi:generate && git diff --exit-code apps/api/openapi.json

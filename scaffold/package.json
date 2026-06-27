@@ -1,0 +1,59 @@
+{
+  "//": "Root manifest of the <App> monorepo. Turborepo + pnpm workspaces, Node 22, TS 5.7. Every task delegates to `turbo run` so dependency ordering + caching live ONCE in turbo.json. Replace the @app/* scope with your org scope and the 'feature' module with your first bounded context.",
+  "name": "app-harness",
+  "version": "0.1.0",
+  "private": true,
+  "//packageManager": "Pin the EXACT pnpm version so installs are reproducible across machines and CI. Bump deliberately.",
+  "packageManager": "pnpm@10.15.1",
+  "engines": {
+    "node": ">=22"
+  },
+  "pnpm": {
+    "//overrides": "Force transitive deps to patched versions to clear the high/critical audit gate (DoD). These are easy to forget when bumping deps — re-run `pnpm audit --audit-level high` after any upgrade. Examples shown; adjust to whatever advisories your tree has. Leave empty {} if none.",
+    "overrides": {
+      "esbuild": ">=0.28.1"
+    }
+  },
+  "scripts": {
+    "//scripts": "Every gate verb is `turbo run <task>` so ordering (^build) + caching are declared in turbo.json, not duplicated per app. Only cross-cutting verbs that don't fit the task graph (e2e via playwright, db:* filters, stack:* docker compose) call tools directly.",
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:int": "turbo run test:int",
+    "test:e2e": "playwright test",
+    "eval": "turbo run eval",
+    "audit": "pnpm audit --audit-level high",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "db:generate": "pnpm --filter @app/api db:generate",
+    "db:migrate": "pnpm --filter @app/api db:migrate",
+    "stack:up": "docker compose up -d --wait",
+    "stack:up:obs": "docker compose -f compose.yaml -f compose.observability.yaml --profile observability up -d --wait",
+    "stack:down": "docker compose down -v",
+    "//prepare": "`husky` here is what installs the git hooks on ANY `pnpm install` (fresh clones included). Without this, the DoD hooks silently never run.",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^21.0.2",
+    "@commitlint/config-conventional": "^21.0.2",
+    "@fast-check/vitest": "^0.4.1",
+    "@playwright/test": "^1.54.0",
+    "@testcontainers/postgresql": "^11.0.0",
+    "@testcontainers/rabbitmq": "^11.0.0",
+    "@testcontainers/redis": "^11.0.0",
+    "@types/node": "^22.10.0",
+    "@vitest/coverage-v8": "^4.1.8",
+    "dotenv": "^16.4.7",
+    "fast-check": "^4.1.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.7",
+    "pg": "^8.13.1",
+    "prettier": "^3.4.2",
+    "testcontainers": "^11.0.0",
+    "tsx": "^4.19.2",
+    "turbo": "^2.4.0",
+    "typescript": "^5.7.2",
+    "vitest": "^4.1.8"
+  }
+}

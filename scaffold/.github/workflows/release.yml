@@ -1,0 +1,29 @@
+# Release — release-please reads Conventional Commits on push to main and
+# opens/maintains a Release PR carrying CHANGELOG.md + a version bump + a tag.
+# Automated release is a free consequence of the disciplined commit log that
+# commitlint enforces. Packages are private here — no publish step.
+#
+# ONE-TIME REPO PREREQUISITE (besides the permissions below):
+#   Settings → Actions → General →
+#     "Allow GitHub Actions to create and approve pull requests"
+# Without it release-please fails with:
+#   "GitHub Actions is not permitted to create or approve pull requests".
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write # create the tag + GitHub Release
+  pull-requests: write # open/maintain the Release PR
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v5
+        with:
+          # Root mode: a single config + manifest at the repo root.
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
