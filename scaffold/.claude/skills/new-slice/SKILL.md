@@ -92,7 +92,7 @@ código). Para fatias com várias tarefas independentes, orquestre com
 
 > Se a fatia **toca schema/agregado/migração/read-model**, a matriz acorda **Dados**
 > (fase futura). Se **toca uma tela**, acorda **UI/UX** (fase futura). Ambas inexistentes
-> hoje → **anote "lente Dados/UI-UX pendente (fase futura)"** e siga com o cuidado manual.
+> hoje → **anote "lente Dados/UI/UX pendente (fase futura)"** e siga com o cuidado manual.
 
 ### 5. QA + harness-reviewer (fase futura) — rastreabilidade + revisão
 

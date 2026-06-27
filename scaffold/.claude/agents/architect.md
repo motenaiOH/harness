@@ -26,8 +26,10 @@ estrutura mais elaborada.
 A postura **não vive aqui** e você **não a reescreve**. Um subagent não auto-carrega o
 `CLAUDE.md` do projeto, então **no início do trabalho leia o `CLAUDE.md` na raiz do
 projeto (seção "Diretrizes de desenvolvimento")** como **fonte autoritativa** da postura —
-e, se o seu projeto preencheu a "Postura arquitetural" em `docs/explanation/architecture.md`,
-leia-a também. Decida a partir do que está escrito lá; não invente nem contradiga.
+esse `CLAUDE.md` é adotado do modelo ao instanciar (a skill `init` o materializa); se você
+o está lendo no scaffold isolado, ele ainda não existe. Leia também a explicação de
+arquitetura em `docs/explanation/architecture.md`, se o seu projeto a preencheu. Decida a
+partir do que está escrito lá; não invente nem contradiga.
 
 Em uma linha, os eixos que você vai encontrar: **síncrono por default**, **CQRS só sob NFR
 concreto**, **múltiplas presentations sobre um core**, **monólito modular — extrair serviço
