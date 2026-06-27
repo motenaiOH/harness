@@ -27,6 +27,6 @@
 | novo agregado + read-model em produção | Produto + Arquiteto + Dados + QA + SRE + reviewer + ADR |
 
 > Nota: a matriz lista todas as 7 lentes (Produto, Arquiteto, Dados, UI/UX, QA,
-> SRE/DevSecOps, Pesquisador). **Arquiteto, QA e harness-reviewer já existem; as demais
-> (Produto, Dados, UI/UX, SRE/DevSecOps, Pesquisador) são fase futura.** A triagem já as
+> SRE/DevSecOps, Pesquisador). **Todas as lentes da matriz já existem (architect, qa,
+> harness-reviewer, data, sre-devsecops, ui-ux, researcher, product).** A triagem já as
 > conhece ao ler esta tabela.

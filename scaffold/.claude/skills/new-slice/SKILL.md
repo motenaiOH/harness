@@ -65,13 +65,10 @@ absorva no loop principal um trabalho que tem dono.
 
 ### 2. Produto (se convocado) — cortar a fatia
 
-Se a matriz acordou **Produto**, use `superpowers:brainstorming` para **cortar a fatia
-vertical** (o menor incremento ponta a ponta que entrega valor) e fixar os **critérios de
-aceite**. Registre o resultado no plano (`superpowers:writing-plans`).
-
-> Lente **Produto** ainda não existe como papel dedicado (fase futura). Até existir,
-> conduza o corte você mesmo com `superpowers:brainstorming` e **anote "lente Produto
-> pendente (fase futura)"** no plano — siga sem travar.
+Se a matriz acordou **Produto**, **invoque o agente `product`**: ele **corta a fatia
+vertical** (o menor incremento ponta a ponta que entrega valor) e fixa os **critérios de
+aceite**, compondo `superpowers:brainstorming` no processo. Registre o resultado no plano
+(`superpowers:writing-plans`).
 
 ### 3. Arquiteto (se convocado) — decidir a forma → ADR
 
@@ -80,8 +77,9 @@ ambíguo, ou risco alto que **força ADR**), **invoque o agente `architect`**. E
 interroga os NFRs, decide a forma e produz um **ADR**. Não decida forma no loop principal
 quando há dono para isso.
 
-> Se a decisão depender de **evidência externa**, a matriz acorda também o **Pesquisador**
-> (fase futura) — **anote-o como pendente** e siga com o melhor dado disponível.
+> Se a decisão depender de **evidência externa**, a matriz acorda também o **Pesquisador**:
+> **invoque o agente `researcher`**, que levanta a evidência e devolve as fontes para
+> embasar a decisão de forma.
 
 ### 4. Build — materializar via TDD
 
@@ -90,9 +88,10 @@ Invoque a skill **`new-module`** (que por sua vez compõe
 código). Para fatias com várias tarefas independentes, orquestre com
 `superpowers:subagent-driven-development`.
 
-> Se a fatia **toca schema/agregado/migração/read-model**, a matriz acorda **Dados**
-> (fase futura). Se **toca uma tela**, acorda **UI/UX** (fase futura). Ambas inexistentes
-> hoje → **anote "lente Dados/UI/UX pendente (fase futura)"** e siga com o cuidado manual.
+> Se a fatia **toca schema/agregado/migração/read-model**, a matriz acorda **Dados**:
+> **invoque o agente `data`** (modelagem, migração segura, read-model, índices/PII). Se
+> **toca uma presentation com UI**, acorda **UI/UX**: **invoque o agente `ui-ux`**. Ambos
+> rodam como subagents com contexto próprio e devolvem ao build.
 
 ### 5. QA + harness-reviewer — rastreabilidade + revisão
 
@@ -104,6 +103,12 @@ código**. Ambos rodam como subagents com contexto próprio.
 **Achado bloqueante de qualquer um → volta pro passo 4 (build):** uma **lacuna de
 adequação** apontada pelo QA, ou um achado **Critical/Important** do harness-reviewer,
 reabre o build (passo 4); refaça e revalide aqui antes de seguir ao DoD.
+
+> Se a fatia **toca infra/deploy** ou vai **perto de produção/cliente-facing**, a matriz
+> acorda o **SRE/DevSecOps**: **invoque o agente `sre-devsecops`** — par operacional do
+> harness-reviewer — para a **revisão de prontidão** (deploy, rollback, observabilidade,
+> segredos, postura de segurança). Ela entra **antes/junto** do DoD; achado bloqueante
+> reabre o build como os demais.
 
 ### 6. DoD gate — evidência, depois ADR + current-state
 
@@ -126,11 +131,16 @@ A fatia só está **pronta** quando os três acima refletem o estado real.
 - **Override do humano** sobre uma proposta da triagem → **fica registrado** (no plano),
   para que a retomada e a auditoria saibam que foi uma escolha consciente.
 
-## Degradação graciosa (fase atual)
+## Degradação graciosa (princípio)
 
-Hoje existem de fato: a **matriz** (`.claude/convocation-matrix.md`), o agente
-**`architect`**, os agentes **`qa`** e **`harness-reviewer`** e a skill **`new-module`**.
-As demais lentes (Produto, Dados, SRE/DevSecOps, UI/UX, Pesquisador) são **fase futura**.
-Sempre que a triagem propuser uma lente que ainda não existe, **anote "lente X pendente (fase futura)"
-no plano e SIGA — sem travar**. A ausência de um papel **nunca** bloqueia a fatia; ela
-vira uma nota explícita e o cuidado manual cobre o essencial até o papel nascer.
+**Hoje TODAS as lentes (papéis) da matriz existem.** Existem de fato: a **matriz**
+(`.claude/convocation-matrix.md`), os **8 agentes** — **`architect`**, **`qa`**,
+**`harness-reviewer`**, **`data`**, **`sre-devsecops`**, **`ui-ux`**, **`researcher`** e
+**`product`** — e a skill **`new-module`**. Nenhuma lente fica pendente: a triagem acorda
+o papel e o passo correspondente **invoca o agente real**.
+
+O **princípio** da degradação graciosa segue valendo como regra geral: se um dia uma peça
+**faltar** — por exemplo as **skills ainda não criadas** (`status`, `new-presentation`,
+`new-adr`, `init`) —, **anote a pendência no plano e SIGA — sem travar**. A ausência de
+uma peça **nunca** bloqueia a fatia; ela vira uma nota explícita e o cuidado manual cobre o
+essencial até a peça nascer.

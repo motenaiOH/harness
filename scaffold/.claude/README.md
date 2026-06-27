@@ -19,7 +19,12 @@ termo de domínio.
 ├── agents/                   ← julgamento independente (subagents)
 │   ├── architect.md
 │   ├── qa.md
-│   └── harness-reviewer.md
+│   ├── harness-reviewer.md
+│   ├── data.md
+│   ├── sre-devsecops.md
+│   ├── ui-ux.md
+│   ├── researcher.md
+│   └── product.md
 └── skills/                   ← procedimentos que o loop principal executa
     ├── new-slice/SKILL.md
     └── new-module/SKILL.md
@@ -32,8 +37,11 @@ termo de domínio.
 - **`agents/`** — **papéis** de julgamento independente, rodados como **subagents**. Têm
   contexto próprio e empurram contra gold-plating; um subagent **não** auto-carrega o
   `CLAUDE.md`, então cada agente lê a fonte autoritativa no início do trabalho. Hoje
-  existem o `architect` (decide **forma** e **NFR**, produz um ADR), o `qa` (rastreabilidade
-  critério↔teste + adequação) e o `harness-reviewer` (revisão de código).
+  existem **os 8**: o `architect` (decide **forma** e **NFR**, produz um ADR), o `qa`
+  (rastreabilidade critério↔teste + adequação), o `harness-reviewer` (revisão de código),
+  o `data` (schema/migração/read-model/PII), o `sre-devsecops` (prontidão de
+  infra/deploy/segurança), o `ui-ux` (presentation com UI), o `researcher` (evidência
+  externa) e o `product` (corte de fatia + critérios de aceite).
 - **`convocation-matrix.md`** — as **regras da triagem**: o mapa *gatilho da fatia → lente
   a acordar* + os modificadores de estágio × risco. A skill `new-slice` **lê** a matriz na
   triagem; não a duplica. Mudou a matriz → a triagem muda junto, sem editar a skill.
@@ -60,29 +68,30 @@ possível.
 Esta camada é construída de forma incremental. O **backbone** já está de pé; o resto é
 anotado como pendente pela triagem e **nunca trava** a fatia (degradação graciosa).
 
-**Existe hoje (backbone):**
+**Existe hoje (backbone + todas as lentes):**
 
 - a **matriz** de convocação (`convocation-matrix.md`);
 - o agente **`architect`** (`agents/architect.md`);
 - os **agentes baseline** **`qa`** (rastreabilidade critério↔teste) e
   **`harness-reviewer`** (revisão de código), acordados pela matriz em qualquer mudança de
   comportamento e invocados pelo passo 5 do `new-slice`;
+- os **agentes condicionais** — **`data`** (schema/agregado/migração/read-model/PII),
+  **`sre-devsecops`** (infra/deploy/prontidão/segurança), **`ui-ux`** (presentation com UI),
+  **`researcher`** (evidência externa) e **`product`** (escopo/valor novo) —, acordados pelos
+  gatilhos específicos da matriz e invocados pelos passos 2/3/4/5 do `new-slice`;
 - as skills **`new-slice`** e **`new-module`** (`skills/`).
 
 **Chega nas fases futuras:**
 
-- **Agentes condicionais** — **Dados**, **SRE/DevSecOps**, **UI/UX**, **Pesquisador** e
-  **Produto**, acordados pelos gatilhos específicos da matriz (schema/migração, infra/deploy,
-  tela com UI, evidência externa, escopo/valor novo). Idem: anotados como pendentes até
-  nascerem.
 - **Skills restantes** — `status` (snapshot do estado), `new-presentation` (adicionar uma
   borda sobre o core), `new-adr` (conduzir um ADR) e `init` (instanciar o harness num projeto).
 
 > A matriz lista **todas as 7 lentes** (Produto, Arquiteto, Dados, UI/UX, QA,
-> SRE/DevSecOps, Pesquisador). Hoje existem de fato o **Arquiteto**, o **QA** e o
-> **harness-reviewer**; as demais são fase futura. A triagem já as conhece ao ler a tabela;
-> quando uma lente proposta ainda não existe, vira uma nota explícita no plano e o cuidado
-> manual cobre o essencial **sem travar**.
+> SRE/DevSecOps, Pesquisador) e **todas já existem** como agentes (`architect`, `qa`,
+> `harness-reviewer`, `data`, `sre-devsecops`, `ui-ux`, `researcher`, `product`). A triagem
+> as conhece ao ler a tabela e cada passo invoca o agente real. O **princípio** da
+> degradação graciosa segue valendo: se uma peça faltar (ex.: as skills ainda não criadas),
+> vira nota explícita no plano e o cuidado manual cobre o essencial **sem travar**.
 
 ## Como isto se encaixa
 
