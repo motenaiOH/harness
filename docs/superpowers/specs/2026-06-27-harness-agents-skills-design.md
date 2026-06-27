@@ -80,7 +80,7 @@ Forma: subagent + checklist-companion. Todos em `scaffold/.claude/agents/` salvo
 > é o **reviewer baseline** que roda junto do QA em toda mudança de código. Vive em
 > `scaffold/.claude/agents/`.
 
-## 4. As 5 skills (a máquina que orquestra)
+## 4. As 6 skills (a máquina que orquestra)
 
 Em `scaffold/.claude/skills/`, **exceto `init`** (no `.claude/` do repo do modelo — é a skill
 que *instancia* o modelo; não faz sentido morar dentro do que ela copia).
@@ -91,19 +91,22 @@ que *instancia* o modelo; não faz sentido morar dentro do que ela copia).
 | **`new-module`** *(maior gap)* | materializa as 4 camadas a partir dos READMEs de camada; liga composition root; gera contrato + esqueleto de teste | TDD | Dados (se data-significativo) |
 | **`new-presentation`** | scaffolda um novo adapter de borda (CLI/API pública/…) sobre use-cases existentes | — | UI/UX (se tem tela) |
 | **`new-adr`** | próximo ADR numerado do template + entra no nav do mkdocs | — | — |
+| **`status`** *(read-only)* | responde "onde paramos / próximo passo / há objeção aberta?" lendo `current-state` + plano aberto + git — **sem** entrar no `new-slice` | — | — |
 | **`init`** *(repo do modelo)* | bootstrap: copia scaffold, renomeia escopo, **Passo-0** (forma/NFR), purga proveniência, roda o guard anti-vazamento | — | Arquiteto; Pesquisador (se valida ideia) |
 
 **O passo de triagem dentro do `new-slice` (o coração):**
 
 ```
 new-slice
-  └─ 0. TRIAGEM (barata): lê {tipo de mudança × estágio × risco}
+  └─ 0. RETOMADA: detecta slice em voo (plano com caixas abertas / branch / current-state)
+         → retoma de onde parou; senão, começa novo (ver §7)
+  └─ 1. TRIAGEM (barata): lê {tipo de mudança × estágio × risco}
          → PROPÕE quais lentes acordar + porquê  →  humano confirma/ajusta
-  └─ 1. Produto (se convocado): corta a fatia + critérios de aceite
-  └─ 2. Arquiteto (se convocado): forma/NFR → ADR   [Pesquisador se precisa evidência]
-  └─ 3. Build: new-module / TDD       [Dados se migração/agregado; UI/UX se tela]
-  └─ 4. QA + harness-reviewer: rastreabilidade + revisão de código
-  └─ 5. DoD gate (verification-before-completion) → atualiza ADR + current-state
+  └─ 2. Produto (se convocado): corta a fatia + critérios de aceite
+  └─ 3. Arquiteto (se convocado): forma/NFR → ADR   [Pesquisador se precisa evidência]
+  └─ 4. Build: new-module / TDD       [Dados se migração/agregado; UI/UX se tela]
+  └─ 5. QA + harness-reviewer: rastreabilidade + revisão de código
+  └─ 6. DoD gate (verification-before-completion) → atualiza ADR + current-state
 ```
 
 Fatia trivial: a triagem propõe "nenhuma lente extra" e vai direto pro build + DoD.
@@ -157,7 +160,38 @@ o humano sobe a dose. Sempre é possível adicionar/remover uma lente antes de s
 **Princípio:** lentes expõem, humano decide, decisões ficam no registro; independência
 preservada (uma lente pode constar dissidente mesmo vencida); o escrutínio escala ao risco.
 
-## 7. Validação da própria ferramenta
+## 7. Orquestração & continuidade
+
+**Não há agente-orquestrador separado: o maestro é o loop principal**, com a *partitura* do
+`new-slice`. Um subagent é spawned-faz-retorna-morre; quem persiste pelo slice inteiro e invoca
+skills/agents é o **loop principal (a conversa)**. Um orquestrador que guardasse o estado no
+próprio contexto seria **ponto único de falha** e violaria o princípio do modelo (*estado mora no
+repo; reinício barato*).
+
+A orquestração é **dividida em 3 mecanismos** — não depende da memória de nenhum agente:
+
+| Pergunta | Quem responde | Onde |
+| --- | --- | --- |
+| onde estamos *agora* (nesta sessão)? | **task list** que o `new-slice` cria/atualiza por passo | memória da sessão |
+| onde **paramos** / qual o **próximo passo**? | **checkboxes do plano** + commits + `current-state.md` + ADRs | **repo-resident** (sobrevive a sessões) |
+| o fluxo **realmente** rodou (gates)? | **hooks + DoD gate** (`verification-before-completion`) | enforço determinístico |
+
+A *diligência* do maestro **não é confiada — é checada**: o hook bloqueia o commit, o CI bloqueia
+o merge. "Onde paramos" não é lembrança de agente — é **ler o plano + git log + `current-state`**.
+Compõe `writing-plans` (gera o plano/checkboxes) + `executing-plans`/`subagent-driven-development`
+(executa rastreando o progresso).
+
+**Retomada (resume) — `new-slice` é idempotente:** ao ser (re)invocado, ele **primeiro detecta**
+se há um slice em voo (plano com caixas abertas / branch do slice / `current-state` "em
+andamento") e **retoma de onde parou**, em vez de recomeçar. O **arquivo do plano é a fonte de
+verdade do progresso** (checkboxes); o git é a evidência; o `current-state` é o ponteiro legível.
+(Análogo ao `resumeFromRunId` do Workflow, para o slice guiado por humano.)
+
+**`harness:status` (skill read-only):** lê `current-state` + plano aberto + git e responde "onde
+estamos / qual o próximo passo / há objeção aberta?" **sem** entrar no `new-slice`. Barata; é o
+comando para a pergunta "onde paramos?".
+
+## 8. Validação da própria ferramenta
 
 - **Dogfood:** rodar `new-slice`/`new-module` sobre a feature-exemplo (`<feature>`/widget) do
   scaffold e conferir os arquivos gerados + o disparo correto das lentes pela matriz. O domínio
@@ -166,30 +200,30 @@ preservada (uma lente pode constar dissidente mesmo vencida); o escrutínio esca
 - **`agnosticism-auditor`** roda sobre os próprios templates/skills para garantir que não vazam
   negócio nem acoplam stack indevidamente.
 
-## 8. Sequência de implementação (mesmo com D = tudo, há dependência)
+## 9. Sequência de implementação (mesmo com D = tudo, há dependência)
 
-1. **Backbone:** `new-slice` (com triagem) + a **matriz** (config que a triagem lê) +
-   **Arquiteto** + `new-module`.
+1. **Backbone:** `new-slice` (com triagem **e retomada**) + a **matriz** (config que a triagem lê)
+   + **Arquiteto** + `new-module`.
 2. **Baseline:** **QA + harness-reviewer** (toda fatia usa).
 3. **Especialistas condicionais:** Dados, SRE/DevSecOps, UI/UX (∘ frontend-design/figma),
    Pesquisador (∘ deep-research), Produto.
-4. **Skills restantes:** `new-presentation`, `new-adr`, `init`.
+4. **Skills restantes:** `status`, `new-presentation`, `new-adr`, `init`.
 5. **Manutenção do modelo:** `agnosticism-auditor` (no repo do modelo).
 
 Cada peça é pequena; a ordem garante que a espinha funciona antes de pendurar especialista.
 
-## 9. Onde cada coisa mora (resumo)
+## 10. Onde cada coisa mora (resumo)
 
 | Item | Local |
 | --- | --- |
-| `new-slice`, `new-module`, `new-presentation`, `new-adr` | `scaffold/.claude/skills/` (copiadas) |
+| `new-slice`, `new-module`, `new-presentation`, `new-adr`, `status` | `scaffold/.claude/skills/` (copiadas) |
 | `init` | `.claude/` do repo do modelo |
 | Arquiteto, Dados, QA, Produto, SRE/DevSecOps, Pesquisador, UI/UX, harness-reviewer | `scaffold/.claude/agents/` (copiados) |
 | `agnosticism-auditor` | `.claude/` do repo do modelo |
 | Matriz de convocação (config) | `scaffold/.claude/` (lida pela triagem do `new-slice`) |
 | Checklists-companion | reusam/estendem `scaffold/checklists/` |
 
-## 10. Fora de escopo (YAGNI)
+## 11. Fora de escopo (YAGNI)
 
 - Nenhum agente que apenas paráfrase o `CLAUDE.md`/checklist.
 - Sem auto-roteamento opaco (a convocação é sempre proposta-e-confirmada).
