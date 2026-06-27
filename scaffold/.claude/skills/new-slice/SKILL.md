@@ -85,8 +85,10 @@ quando há dono para isso.
 
 Invoque a skill **`new-module`** (que por sua vez compõe
 `superpowers:test-driven-development`: red → green → refactor, teste-que-falha **antes** do
-código). Para fatias com várias tarefas independentes, orquestre com
-`superpowers:subagent-driven-development`.
+código) quando a fatia precisa de um **módulo/bounded context novo**. Se a fatia apenas
+**adiciona uma presentation** (um novo canal/borda sobre use-cases que já existem), invoque
+a skill **`new-presentation`** em vez do `new-module`. Para fatias com várias tarefas
+independentes, orquestre com `superpowers:subagent-driven-development`.
 
 > Se a fatia **toca schema/agregado/migração/read-model**, a matriz acorda **Dados**:
 > **invoque o agente `data`** (modelagem, migração segura, read-model, índices/PII). Se
@@ -133,14 +135,16 @@ A fatia só está **pronta** quando os três acima refletem o estado real.
 
 ## Degradação graciosa (princípio)
 
-**Hoje TODAS as lentes (papéis) da matriz existem.** Existem de fato: a **matriz**
-(`.claude/convocation-matrix.md`), os **8 agentes** — **`architect`**, **`qa`**,
-**`harness-reviewer`**, **`data`**, **`sre-devsecops`**, **`ui-ux`**, **`researcher`** e
-**`product`** — e a skill **`new-module`**. Nenhuma lente fica pendente: a triagem acorda
-o papel e o passo correspondente **invoca o agente real**.
+**Hoje TODAS as lentes (papéis) da matriz E todas as skills por-projeto existem.** Existem
+de fato: a **matriz** (`.claude/convocation-matrix.md`), os **8 agentes** — **`architect`**,
+**`qa`**, **`harness-reviewer`**, **`data`**, **`sre-devsecops`**, **`ui-ux`**,
+**`researcher`** e **`product`** — e as skills **`new-module`**, **`new-presentation`**,
+**`new-adr`** e **`status`**. Nenhuma lente nem skill por-projeto fica pendente: a triagem
+acorda o papel e o passo correspondente **invoca o agente/skill real**.
 
 O **princípio** da degradação graciosa segue valendo como regra geral: se um dia uma peça
-**faltar** — por exemplo as **skills ainda não criadas** (`status`, `new-presentation`,
-`new-adr`, `init`) —, **anote a pendência no plano e SIGA — sem travar**. A ausência de
-uma peça **nunca** bloqueia a fatia; ela vira uma nota explícita e o cuidado manual cobre o
-essencial até a peça nascer.
+**faltar**, **anote a pendência no plano e SIGA — sem travar**. A ausência de uma peça
+**nunca** bloqueia a fatia; ela vira uma nota explícita e o cuidado manual cobre o
+essencial até a peça nascer. Hoje, porém, **nada por-projeto falta** — o único item de
+fase futura é o `agnosticism-auditor` (manutenção do próprio modelo, não roda no projeto
+instanciado).

@@ -27,13 +27,23 @@ termo de domínio.
 │   └── product.md
 └── skills/                   ← procedimentos que o loop principal executa
     ├── new-slice/SKILL.md
-    └── new-module/SKILL.md
+    ├── new-module/SKILL.md
+    ├── new-presentation/SKILL.md
+    ├── new-adr/SKILL.md
+    └── status/SKILL.md
 ```
+
+> A skill **`init`** (que **instancia o modelo** num projeto) **não** mora aqui — ela vive
+> no repositório-modelo, em `.claude/skills/init/`, e por isso **não** é copiada para o
+> `.claude/` do projeto instanciado. As skills acima são as **por-projeto**; `init` é a
+> skill do modelo que cria o projeto.
 
 - **`skills/`** — **procedimentos** que **o loop principal** executa como passos. Não são
   agentes; são roteiros. `new-slice` **orquestra** uma fatia vertical ponta a ponta
-  (retomada → triagem → lentes → build → DoD → ADR/current-state) e `new-module`
-  **materializa** as 4 camadas de um bounded context a partir dos READMEs de camada.
+  (retomada → triagem → lentes → build → DoD → ADR/current-state), `new-module`
+  **materializa** as 4 camadas de um bounded context a partir dos READMEs de camada,
+  `new-presentation` **adiciona uma borda/canal** sobre use-cases existentes, `new-adr`
+  **conduz um ADR** e `status` **dá o snapshot** do estado do projeto.
 - **`agents/`** — **papéis** de julgamento independente, rodados como **subagents**. Têm
   contexto próprio e empurram contra gold-plating; um subagent **não** auto-carrega o
   `CLAUDE.md`, então cada agente lê a fonte autoritativa no início do trabalho. Hoje
@@ -65,10 +75,11 @@ possível.
 
 ## O que existe HOJE × o que chega nas fases futuras
 
-Esta camada é construída de forma incremental. O **backbone** já está de pé; o resto é
-anotado como pendente pela triagem e **nunca trava** a fatia (degradação graciosa).
+Esta camada é construída de forma incremental. O **backbone**, **todas as lentes** e
+**todas as skills por-projeto** já estão de pé; se um dia faltar uma peça, a triagem a anota
+como pendente e **nunca trava** a fatia (degradação graciosa).
 
-**Existe hoje (backbone + todas as lentes):**
+**Existe hoje (backbone + todas as lentes + todas as skills por-projeto):**
 
 - a **matriz** de convocação (`convocation-matrix.md`);
 - o agente **`architect`** (`agents/architect.md`);
@@ -79,19 +90,26 @@ anotado como pendente pela triagem e **nunca trava** a fatia (degradação graci
   **`sre-devsecops`** (infra/deploy/prontidão/segurança), **`ui-ux`** (presentation com UI),
   **`researcher`** (evidência externa) e **`product`** (escopo/valor novo) —, acordados pelos
   gatilhos específicos da matriz e invocados pelos passos 2/3/4/5 do `new-slice`;
-- as skills **`new-slice`** e **`new-module`** (`skills/`).
+- as **5 skills por-projeto** — **`new-slice`**, **`new-module`**, **`new-presentation`**,
+  **`new-adr`** e **`status`** (`skills/`).
 
-**Chega nas fases futuras:**
+A skill **`init`** (instanciar o harness num projeto) **existe**, mas mora no
+**repositório-modelo** (`.claude/skills/init/`), **não** neste `.claude/` copiado — é a
+skill que **cria** o projeto, então não viaja junto com ele.
 
-- **Skills restantes** — `status` (snapshot do estado), `new-presentation` (adicionar uma
-  borda sobre o core), `new-adr` (conduzir um ADR) e `init` (instanciar o harness num projeto).
+**O que vem depois (manutenção do próprio modelo, fora do projeto instanciado):**
+
+- o agente **`agnosticism-auditor`** (F5) — varre o modelo para garantir que ele segue
+  **business-stripped**; é manutenção do repositório-modelo, **não** uma peça por-projeto.
 
 > A matriz lista **todas as 7 lentes** (Produto, Arquiteto, Dados, UI/UX, QA,
 > SRE/DevSecOps, Pesquisador) e **todas já existem** como agentes (`architect`, `qa`,
-> `harness-reviewer`, `data`, `sre-devsecops`, `ui-ux`, `researcher`, `product`). A triagem
-> as conhece ao ler a tabela e cada passo invoca o agente real. O **princípio** da
-> degradação graciosa segue valendo: se uma peça faltar (ex.: as skills ainda não criadas),
-> vira nota explícita no plano e o cuidado manual cobre o essencial **sem travar**.
+> `harness-reviewer`, `data`, `sre-devsecops`, `ui-ux`, `researcher`, `product`); e as **5
+> skills por-projeto** (`new-slice`, `new-module`, `new-presentation`, `new-adr`, `status`)
+> **também existem**. A triagem conhece lentes e skills ao ler a tabela e cada passo invoca
+> o agente/skill real. O **princípio** da degradação graciosa segue valendo como regra
+> geral: se um dia uma peça faltar, vira nota explícita no plano e o cuidado manual cobre o
+> essencial **sem travar** — mas hoje **nada por-projeto falta**.
 
 ## Como isto se encaixa
 
