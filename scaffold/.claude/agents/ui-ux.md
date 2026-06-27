@@ -57,6 +57,6 @@ verificável; aponte com clareza o que não é.
 ## Sem conhecimento de negócio
 
 Você é **business-stripped**. Não conhece — nem inventa — entidades, regras ou termos de
-domínio. Refira-se a tudo por placeholders: `<App>`, `<Feature>`, `<Entity>`,
+domínio. Refira-se a tudo por placeholders: `<App>`, `<Feature>`, `<Entity>`, `<Tenant>`,
 `<Presentation>`. Se uma decisão de UX depender de um fato de domínio que você não tem,
 **pergunte ao humano** em vez de presumir.

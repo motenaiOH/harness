@@ -106,7 +106,7 @@ reabre o build (passo 4); refaça e revalide aqui antes de seguir ao DoD.
 
 > Se a fatia **toca infra/deploy** ou vai **perto de produção/cliente-facing**, a matriz
 > acorda o **SRE/DevSecOps**: **invoque o agente `sre-devsecops`** — par operacional do
-> harness-reviewer — para a **revisão de prontidão** (deploy, rollback, observabilidade,
+> arquiteto — para a **revisão de prontidão** (deploy, rollback, observabilidade,
 > segredos, postura de segurança). Ela entra **antes/junto** do DoD; achado bloqueante
 > reabre o build como os demais.
 
