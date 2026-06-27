@@ -94,12 +94,16 @@ código). Para fatias com várias tarefas independentes, orquestre com
 > (fase futura). Se **toca uma tela**, acorda **UI/UX** (fase futura). Ambas inexistentes
 > hoje → **anote "lente Dados/UI/UX pendente (fase futura)"** e siga com o cuidado manual.
 
-### 5. QA + harness-reviewer (fase futura) — rastreabilidade + revisão
+### 5. QA + harness-reviewer — rastreabilidade + revisão
 
-Quando os papéis existirem, **QA** confere a rastreabilidade (critério de aceite ↔ teste)
-e **harness-reviewer** revisa o código. Hoje **ambos são fase futura**: **anote "QA +
-harness-reviewer pendentes (fase futura)"** e cubra o essencial pelo DoD do passo 6 — sem
-travar a fatia por causa de um papel que ainda não existe.
+Se a triagem os acordou (baseline em qualquer mudança de comportamento), **invoque o
+agente `qa`** — que confere a **rastreabilidade** (critério de aceite ↔ teste) e a
+**adequação** da cobertura — e o **agente `harness-reviewer`** — que faz a **revisão de
+código**. Ambos rodam como subagents com contexto próprio.
+
+**Achado bloqueante de qualquer um → volta pro passo 4 (build):** uma **lacuna de
+adequação** apontada pelo QA, ou um achado **Critical/Important** do harness-reviewer,
+reabre o build (passo 4); refaça e revalide aqui antes de seguir ao DoD.
 
 ### 6. DoD gate — evidência, depois ADR + current-state
 
@@ -124,9 +128,10 @@ A fatia só está **pronta** quando os três acima refletem o estado real.
 
 ## Degradação graciosa (fase atual)
 
-Hoje existem de fato apenas: a **matriz** (`.claude/convocation-matrix.md`), o agente
-**`architect`** e a skill **`new-module`**. As demais lentes (Produto, Dados, QA,
-harness-reviewer, SRE/DevSecOps, UI/UX, Pesquisador) são **fase futura**. Sempre que a
+Hoje existem de fato: a **matriz** (`.claude/convocation-matrix.md`), o agente
+**`architect`**, os agentes **`qa`** e **`harness-reviewer`** e a skill **`new-module`**.
+As demais lentes (Produto, Dados, SRE/DevSecOps, UI/UX, Pesquisador) são **fase futura**.
+Sempre que a
 triagem propuser uma lente que ainda não existe, **anote "lente X pendente (fase futura)"
 no plano e SIGA — sem travar**. A ausência de um papel **nunca** bloqueia a fatia; ela
 vira uma nota explícita e o cuidado manual cobre o essencial até o papel nascer.

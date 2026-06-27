@@ -17,7 +17,9 @@ termo de domínio.
 ├── README.md                 ← este arquivo
 ├── convocation-matrix.md     ← regras da TRIAGEM (gatilho → lente)
 ├── agents/                   ← julgamento independente (subagents)
-│   └── architect.md
+│   ├── architect.md
+│   ├── qa.md
+│   └── harness-reviewer.md
 └── skills/                   ← procedimentos que o loop principal executa
     ├── new-slice/SKILL.md
     └── new-module/SKILL.md
@@ -29,8 +31,9 @@ termo de domínio.
   **materializa** as 4 camadas de um bounded context a partir dos READMEs de camada.
 - **`agents/`** — **papéis** de julgamento independente, rodados como **subagents**. Têm
   contexto próprio e empurram contra gold-plating; um subagent **não** auto-carrega o
-  `CLAUDE.md`, então cada agente lê a fonte autoritativa no início do trabalho. Hoje só o
-  `architect` existe (decide **forma** e **NFR**, produz um ADR).
+  `CLAUDE.md`, então cada agente lê a fonte autoritativa no início do trabalho. Hoje
+  existem o `architect` (decide **forma** e **NFR**, produz um ADR), o `qa` (rastreabilidade
+  critério↔teste + adequação) e o `harness-reviewer` (revisão de código).
 - **`convocation-matrix.md`** — as **regras da triagem**: o mapa *gatilho da fatia → lente
   a acordar* + os modificadores de estágio × risco. A skill `new-slice` **lê** a matriz na
   triagem; não a duplica. Mudou a matriz → a triagem muda junto, sem editar a skill.
@@ -61,13 +64,13 @@ anotado como pendente pela triagem e **nunca trava** a fatia (degradação graci
 
 - a **matriz** de convocação (`convocation-matrix.md`);
 - o agente **`architect`** (`agents/architect.md`);
+- os **agentes baseline** **`qa`** (rastreabilidade critério↔teste) e
+  **`harness-reviewer`** (revisão de código), acordados pela matriz em qualquer mudança de
+  comportamento e invocados pelo passo 5 do `new-slice`;
 - as skills **`new-slice`** e **`new-module`** (`skills/`).
 
 **Chega nas fases futuras:**
 
-- **Agentes baseline** — **QA** (rastreabilidade critério↔teste) e **harness-reviewer**
-  (revisão de código). A matriz já os acorda em qualquer mudança de comportamento; até
-  existirem, a triagem os **anota como pendentes** e o DoD cobre o essencial.
 - **Agentes condicionais** — **Dados**, **SRE/DevSecOps**, **UI/UX**, **Pesquisador** e
   **Produto**, acordados pelos gatilhos específicos da matriz (schema/migração, infra/deploy,
   tela com UI, evidência externa, escopo/valor novo). Idem: anotados como pendentes até
@@ -76,9 +79,10 @@ anotado como pendente pela triagem e **nunca trava** a fatia (degradação graci
   borda sobre o core), `new-adr` (conduzir um ADR) e `init` (instanciar o harness num projeto).
 
 > A matriz lista **todas as 7 lentes** (Produto, Arquiteto, Dados, UI/UX, QA,
-> SRE/DevSecOps, Pesquisador) mesmo nesta fase, em que só o **Arquiteto** existe de fato. A
-> triagem já as conhece ao ler a tabela; quando uma lente proposta ainda não existe, vira
-> uma nota explícita no plano e o cuidado manual cobre o essencial **sem travar**.
+> SRE/DevSecOps, Pesquisador). Hoje existem de fato o **Arquiteto**, o **QA** e o
+> **harness-reviewer**; as demais são fase futura. A triagem já as conhece ao ler a tabela;
+> quando uma lente proposta ainda não existe, vira uma nota explícita no plano e o cuidado
+> manual cobre o essencial **sem travar**.
 
 ## Como isto se encaixa
 
