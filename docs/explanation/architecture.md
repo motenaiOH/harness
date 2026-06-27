@@ -196,13 +196,18 @@ entre módulos — é um processo só — mas a disciplina de camadas garante qu
 um dia um módulo precisar virar serviço, a fronteira já existe. "Extrair depois"
 é um refactor **planejado e documentado em ADR**, não um TODO solto.
 
-## Determinístico primeiro, IA/LLM depois (atrás de um port)
+## Dependências voláteis atrás de um port (caminho crítico determinístico)
 
-O caminho crítico funciona **sem LLM**: o use-case decide o dado de forma
-determinística. Quando um LLM entra (numa fatia posterior), ele entra **atrás de
-um port** e só "explica/organiza" a saída — nunca "decide". Isso mantém o CI
-*keyless*, reproduzível e barato, e torna a troca de provider (ou a remoção do
-LLM) uma questão de rebind no módulo.
+Dependências externas, não-determinísticas ou caras — serviços de terceiros, o
+relógio, a rede e, **quando a app tem**, um LLM — ficam **atrás de um port**; o
+caminho crítico funciona de forma **determinística** e é testável **sem elas**, o que
+mantém o CI *keyless*, reproduzível e barato. O adapter é **best-effort** (no-op/
+fallback quando a dependência está desligada) e nunca trava o boot.
+
+**Exemplo — IA/LLM:** quando um LLM entra (numa fatia posterior), é **atrás desse
+port** e só "explica/organiza" a saída — **nunca "decide"** (a decisão é
+determinística, no use-case). Trocar de provider — ou remover o LLM — vira um rebind
+no módulo.
 
 ## Observabilidade e config (cross-cutting)
 

@@ -86,8 +86,9 @@ Leia primeiro, em ordem:
 - **Wiring só no composition root** (`<feature>.module.ts`).
 - **Escopo vem do claim do token assinado verificado pelo core**, nunca do input
   do usuário — independentemente de qual presentation recebeu a requisição.
-- **Determinístico primeiro:** o caminho crítico funciona sem LLM; LLM entra
-  atrás de um port depois.
+- **Dependências voláteis atrás de um port:** o caminho crítico funciona e é testável
+  sem dependência externa/não-determinística (serviço de terceiros, relógio, rede —
+  e, *se houver*, um LLM); o LLM, se existir, entra atrás do port depois.
 - **Evidência antes de afirmação:** nada está "pronto" sem rodar o gate e colar a
   saída.
 

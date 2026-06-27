@@ -183,10 +183,12 @@ Ciclo de cada fatia (5 fases, cada uma com artefato versionado):
 4. **Execução** subagent-driven (skill `superpowers:subagent-driven-development`).
 5. **ADR** → `docs/adr/NNNN-*.md` (formato Nygard).
 
-**Determinístico primeiro, IA/LLM depois e atrás de um port.** O caminho crítico
-funciona sem LLM (mantendo o CI keyless, reproduzível e grátis); o LLM entra atrás de
-um adapter numa fatia posterior e só **explica/organiza**, nunca **decide**. A
-primeira fatia (S0) é um *walking skeleton*: prova o loop ponta a ponta com o contrato
+**Dependências voláteis atrás de um port; caminho crítico determinístico.**
+Dependências externas/não-determinísticas/caras (serviços de terceiros, relógio, rede
+— e, *se a app tiver*, um LLM) ficam atrás de um port; o caminho crítico funciona e é
+testável **sem elas** (CI keyless, reproduzível, grátis). **Se houver IA/LLM**, ele
+entra atrás desse port numa fatia posterior e só **explica/organiza**, nunca **decide**.
+A primeira fatia (S0) é um *walking skeleton*: prova o loop ponta a ponta com o contrato
 de saída real, sem ainda introduzir as abstrações que virão.
 
 **Mudança breaking num monorepo é atômica.** Como o `typecheck` abrange todos os

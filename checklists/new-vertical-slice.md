@@ -13,8 +13,10 @@ browser; CLI/API por sessão/curl real).
 
 - [ ] A fatia é **genuinamente vertical** (atravessa o sistema) e demoável sozinha na
       presentation que serve.
-- [ ] **Determinístico primeiro:** o caminho crítico funciona **sem LLM**; IA/LLM entra
-      atrás de um port (adapter) numa fatia posterior e só "explica/organiza", nunca "decide".
+- [ ] **Dependências voláteis atrás de um port:** o caminho crítico funciona e é
+      testável **sem** dependência externa/não-determinística (serviço de terceiros,
+      relógio, rede — e, *se houver*, um LLM). **Se a app tem IA/LLM**, entra atrás do
+      port numa fatia posterior e só "explica/organiza", nunca "decide".
 - [ ] Se for a primeira fatia (S0), é um **walking skeleton**: prova o loop ponta a ponta
       com o contrato de saída real, sem introduzir ainda as abstrações que virão depois.
 

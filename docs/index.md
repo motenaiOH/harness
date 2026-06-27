@@ -78,9 +78,10 @@ Cada documento declara seu quadrante e não mistura os modos. Use a coluna
    fan-out) e registrado em ADR. É uma variante, não "o jeito".
 8. **Uma imagem, três papéis** *(na variante assíncrona)* — `api` / `worker` /
    `migrate` diferenciados em runtime pelo command do container.
-9. **Determinístico primeiro, IA/LLM depois** — o caminho crítico funciona sem
-   LLM; o LLM entra atrás de um port numa fatia posterior e só "explica", nunca
-   "decide".
+9. **Dependências voláteis atrás de um port; caminho crítico determinístico** —
+   serviços externos, relógio, rede (e, *se houver*, um LLM) ficam atrás de um port; o
+   caminho crítico funciona e é testável sem eles (best-effort, no-op quando
+   desligados). Se há IA/LLM, entra depois e só "explica", nunca "decide".
 10. **Fail-closed por allowlist** — o que é permitido é explícito; o
     tenant/identidade que escopa uma consulta vem do JWT verificado, nunca do
     input do usuário.

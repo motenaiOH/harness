@@ -87,10 +87,13 @@ Em uma frase cada:
 8. **Uma imagem, três papéis.** O backend é buildado **uma vez** e diferenciado em
    runtime pelo *override do comando* (api / worker / migrate one-shot). As mesmas
    *command arrays* fluem por Compose, Helm e Terraform.
-9. **Determinístico primeiro, IA/LLM depois e atrás de um port.** O caminho crítico
-   funciona sem LLM; o LLM entra atrás de um adapter numa fatia posterior e só
-   *explica/organiza*, nunca *decide*. CI fica keyless, reproduzível e grátis.
-   Telemetria é best-effort por construção (no-op sem endpoint) e nunca trava o boot.
+9. **Dependências voláteis atrás de um port; caminho crítico determinístico.**
+   Dependências externas, não-determinísticas ou caras (serviços de terceiros,
+   relógio, rede — e, *se houver*, um LLM) ficam **atrás de um port**; o caminho
+   crítico funciona e é testável **sem elas** (determinístico, reproduzível — CI
+   keyless e grátis). Adapters são **best-effort** com fallback/degradação graciosa
+   (no-op quando desligados) e **nunca travam o boot**. **Se a app tem IA/LLM**, ele
+   entra atrás desse port numa fatia posterior e só *explica/organiza*, **nunca decide**.
 10. **Fail-closed por allowlist; escopo sempre do contexto autenticado.** Tabelas/
     colunas/funções e origens CORS permitidas são allowlists explícitas (denylist
     sempre esquece algo); o `<Tenant>`/identidade que escopa uma query vem do claim
