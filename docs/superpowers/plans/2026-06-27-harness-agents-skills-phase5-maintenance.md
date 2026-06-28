@@ -13,7 +13,7 @@
 ## Como se "testa"
 Estrutural (frontmatter/seções) + o agente VIVE no modelo (não em scaffold, não copiado) + zero-vazamento no próprio arquivo + mkdocs `--strict` PASS + dogfood seca (raciocínio sobre um diff que introduz acoplamento).
 
-> Nota: este agente **legitimamente NOMEIA** os termos de negócio da origem (mik/thor/cfop/...) porque seu trabalho é caçá-los — então a verificação anti-vazamento DELE confirma que ele os lista numa **lista de termos-proibidos**, não que os usa como conteúdo de negócio. (A verificação whole-word vai casar; trate como esperado e use uma checagem manual: os termos só aparecem na rubrica "FORBIDDEN", não em prosa de domínio.)
+> Nota: este agente **legitimamente NOMEIA** os termos de negócio da origem (os termos da origem) porque seu trabalho é caçá-los — então a verificação anti-vazamento DELE confirma que ele os lista numa **lista de termos-proibidos**, não que os usa como conteúdo de negócio. (A verificação whole-word vai casar; trate como esperado e use uma checagem manual: os termos só aparecem na rubrica "FORBIDDEN", não em prosa de domínio.)
 
 ---
 

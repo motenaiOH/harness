@@ -54,7 +54,7 @@ cd C:/project/wk/harness-model
 grep -qE '^name: new-adr' scaffold/.claude/skills/new-adr/SKILL.md && echo "frontmatter OK"
 grep -qiE 'próximo número|0000-adr-template|nav do mkdocs|imutab|Nygard' scaffold/.claude/skills/new-adr/SKILL.md && echo "passos OK"
 grep -c 'scaffold/' scaffold/.claude/skills/new-adr/SKILL.md   # 0
-grep -rniE 'mik|thor|cfop|payable|titulo|tesouraria|faturamento' scaffold/.claude/skills/new-adr/SKILL.md || echo "sem vazamento"
+grep -rniE '<termos-da-origem>' scaffold/.claude/skills/new-adr/SKILL.md || echo "sem vazamento"
 mkdocs build --strict >/dev/null 2>&1 && echo "mkdocs PASS" || echo FAIL; rm -rf site
 ```
 Expected: `frontmatter OK`, `passos OK`, `0`, `sem vazamento`, `mkdocs PASS`.
@@ -89,7 +89,7 @@ cd C:/project/wk/harness-model
 grep -qE '^name: new-presentation' scaffold/.claude/skills/new-presentation/SKILL.md && echo "frontmatter OK"
 grep -qiE 'adapter de borda|use-cases existentes|escopo.*autenticado|ui-ux|test-driven' scaffold/.claude/skills/new-presentation/SKILL.md && echo "passos OK"
 grep -c 'scaffold/' scaffold/.claude/skills/new-presentation/SKILL.md   # 0
-grep -rniE 'mik|thor|cfop|payable|titulo|tesouraria|faturamento' scaffold/.claude/skills/new-presentation/SKILL.md || echo "sem vazamento"
+grep -rniE '<termos-da-origem>' scaffold/.claude/skills/new-presentation/SKILL.md || echo "sem vazamento"
 mkdocs build --strict >/dev/null 2>&1 && echo "mkdocs PASS" || echo FAIL; rm -rf site
 ```
 Expected: `frontmatter OK`, `passos OK`, `0`, `sem vazamento`, `mkdocs PASS`.
@@ -122,7 +122,7 @@ cd C:/project/wk/harness-model
 grep -qE '^name: status' scaffold/.claude/skills/status/SKILL.md && echo "frontmatter OK"
 grep -qiE 'read-only|current-state|caixas|próximo passo|não altera' scaffold/.claude/skills/status/SKILL.md && echo "passos OK"
 grep -c 'scaffold/' scaffold/.claude/skills/status/SKILL.md   # 0
-grep -rniE 'mik|thor|cfop|payable|titulo|tesouraria|faturamento' scaffold/.claude/skills/status/SKILL.md || echo "sem vazamento"
+grep -rniE '<termos-da-origem>' scaffold/.claude/skills/status/SKILL.md || echo "sem vazamento"
 mkdocs build --strict >/dev/null 2>&1 && echo "mkdocs PASS" || echo FAIL; rm -rf site
 ```
 Expected: `frontmatter OK`, `passos OK`, `0`, `sem vazamento`, `mkdocs PASS`.
@@ -160,7 +160,7 @@ cd C:/project/wk/harness-model
 grep -qE '^name: init' .claude/skills/init/SKILL.md && echo "frontmatter OK"
 grep -qiE 'copiar.*scaffold|CLAUDE.md|checklists|Passo-0|architect|proveniência|guard anti-vazamento' .claude/skills/init/SKILL.md && echo "passos OK"
 grep -qiE 'NÃO.*copie.*docs do modelo|NÃO.*\.claude do modelo|init/agnosticism' .claude/skills/init/SKILL.md && echo "exclusões OK"
-grep -rniE 'mik|thor|cfop|payable|titulo|tesouraria|faturamento' .claude/skills/init/SKILL.md || echo "sem vazamento"
+grep -rniE '<termos-da-origem>' .claude/skills/init/SKILL.md || echo "sem vazamento"
 mkdocs build --strict >/dev/null 2>&1 && echo "mkdocs PASS" || echo FAIL; rm -rf site
 ```
 Expected: `frontmatter OK`, `passos OK`, `exclusões OK`, `sem vazamento`, `mkdocs PASS`.
@@ -197,7 +197,7 @@ cd C:/project/wk/harness-model
 echo "skills por-projeto:"; ls scaffold/.claude/skills/   # new-module, new-slice, new-adr, new-presentation, status
 echo "skill do modelo:"; ls .claude/skills/   # init
 mkdocs build --strict >/dev/null 2>&1 && echo "raiz PASS"; rm -rf site; (cd scaffold && mkdocs build --strict >/dev/null 2>&1 && echo "scaffold PASS"; rm -rf site)
-grep -rniE '\b(mik|thor|cfop|payable|tesouraria|faturamento)\b' scaffold/.claude .claude/skills/init/SKILL.md || echo "fase sem vazamento"
+grep -rniE '\b(<termos-da-origem>)\b' scaffold/.claude .claude/skills/init/SKILL.md || echo "fase sem vazamento"
 ```
 Expected: 5 skills por-projeto, `init` no modelo, ambos mkdocs PASS, `fase sem vazamento`.
 - [ ] **Step 3:** Ajuste+commit se necessário; senão a fase fecha nas Tasks 1-5.

@@ -2,7 +2,7 @@
 
 ADR = **Architecture Decision Record** (formato Nygard). É um **log de decisão
 imutável**: captura o PORQUÊ e o trade-off de uma decisão arquitetural. Vive em
-`docs/adr/NNNN-<titulo>.md`, numerado sequencialmente.
+`docs/adr/NNNN-<slug>.md`, numerado sequencialmente.
 
 > Doc-as-code: o ADR é escrito **junto** com a mudança, na mesma alteração — não depois.
 

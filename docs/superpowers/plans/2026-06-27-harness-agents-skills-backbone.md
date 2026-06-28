@@ -15,7 +15,7 @@
 Não há unit test tradicional. A verificação de **cada** task é a combinação:
 
 1. **Estrutural** — `grep` confirma frontmatter (`name`/`description`) e as seções obrigatórias.
-2. **Anti-vazamento** — `git grep -niE 'mik|thor|cfop|payable|titulo|tesouraria|faturamento|nota fiscal' <arquivos>` retorna **vazio** (placeholders `<App>/<Feature>/<Entity>/<Tenant>/<Presentation>` apenas; `author`→"thor" é falso-positivo conhecido — filtre).
+2. **Anti-vazamento** — `git grep -niE '<termos-da-origem>|nota fiscal' <arquivos>` retorna **vazio** (placeholders `<App>/<Feature>/<Entity>/<Tenant>/<Presentation>` apenas; `author`→"thor" é falso-positivo conhecido — filtre).
 3. **Dogfood** — invocar o artefato sobre a feature-exemplo `widget` numa sessão de rascunho e conferir o comportamento descrito em "Expected".
 4. **Não-regressão de docs** — `mkdocs build --strict` (raiz + scaffold) continua **PASS** (os arquivos novos ficam fora de `docs_dir`, então não devem afetar — confirme).
 
@@ -86,7 +86,7 @@ Run:
 ```bash
 cd C:/project/wk/harness-model
 grep -qE '## Gatilho → lente' scaffold/.claude/convocation-matrix.md && grep -qE '## Modificadores' scaffold/.claude/convocation-matrix.md && echo "estrutura OK"
-git grep -niE 'mik|thor|cfop|payable|titulo|tesouraria|faturamento' -- scaffold/.claude/convocation-matrix.md || echo "sem vazamento"
+git grep -niE '<termos-da-origem>' -- scaffold/.claude/convocation-matrix.md || echo "sem vazamento"
 ```
 Expected: `estrutura OK` e `sem vazamento`.
 
@@ -146,7 +146,7 @@ Run:
 ```bash
 cd C:/project/wk/harness-model
 grep -qE '^name: architect' scaffold/.claude/agents/architect.md && grep -qE '^description:' scaffold/.claude/agents/architect.md && echo "frontmatter OK"
-git grep -niE 'mik|thor|cfop|payable|titulo|tesouraria|faturamento' -- scaffold/.claude/agents/architect.md scaffold/checklists/architecture-form-decision.md || echo "sem vazamento"
+git grep -niE '<termos-da-origem>' -- scaffold/.claude/agents/architect.md scaffold/checklists/architecture-form-decision.md || echo "sem vazamento"
 ```
 Expected: `frontmatter OK` e `sem vazamento`.
 
@@ -196,7 +196,7 @@ Run:
 cd C:/project/wk/harness-model
 grep -qE '^name: new-module' scaffold/.claude/skills/new-module/SKILL.md && echo "frontmatter OK"
 grep -qiE 'READMEs de camada|domain.*application.*infrastructure.*presentation|composition root' scaffold/.claude/skills/new-module/SKILL.md && echo "passos-chave OK"
-git grep -niE 'mik|thor|cfop|payable|titulo|tesouraria|faturamento' -- scaffold/.claude/skills/new-module/SKILL.md || echo "sem vazamento"
+git grep -niE '<termos-da-origem>' -- scaffold/.claude/skills/new-module/SKILL.md || echo "sem vazamento"
 ```
 Expected: `frontmatter OK`, `passos-chave OK`, `sem vazamento`.
 
@@ -248,7 +248,7 @@ Run:
 cd C:/project/wk/harness-model
 grep -qE '^name: new-slice' scaffold/.claude/skills/new-slice/SKILL.md && echo "frontmatter OK"
 grep -qiE 'RETOMADA|TRIAGEM|convocation-matrix|verification-before-completion|current-state' scaffold/.claude/skills/new-slice/SKILL.md && echo "passos-chave OK"
-git grep -niE 'mik|thor|cfop|payable|titulo|tesouraria|faturamento' -- scaffold/.claude/skills/new-slice/SKILL.md || echo "sem vazamento"
+git grep -niE '<termos-da-origem>' -- scaffold/.claude/skills/new-slice/SKILL.md || echo "sem vazamento"
 ```
 Expected: `frontmatter OK`, `passos-chave OK`, `sem vazamento`.
 
@@ -298,7 +298,7 @@ Run:
 cd C:/project/wk/harness-model
 mkdocs build --strict >/dev/null 2>&1 && echo "mkdocs raiz PASS" || echo "FAIL"; rm -rf site
 (cd scaffold && mkdocs build --strict >/dev/null 2>&1 && echo "mkdocs scaffold PASS" || echo FAIL; rm -rf site)
-git grep -niE '\b(mik|thor|cfop|payable|tesouraria|faturamento)\b' -- scaffold/.claude scaffold/checklists/architecture-form-decision.md || echo "fase sem vazamento"
+git grep -niE '\b(<termos-da-origem>)\b' -- scaffold/.claude scaffold/checklists/architecture-form-decision.md || echo "fase sem vazamento"
 ```
 Expected: `mkdocs raiz PASS`, `mkdocs scaffold PASS`, `fase sem vazamento`.
 

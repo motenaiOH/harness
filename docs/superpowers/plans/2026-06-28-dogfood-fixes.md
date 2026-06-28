@@ -68,7 +68,7 @@ test -f scaffold/apps/api/src/SHARED-INFRA.README.md && echo "infra README OK"
 grep -qiE 'auth|drizzle|redis|messaging|health|zod-validation' scaffold/apps/api/src/SHARED-INFRA.README.md && echo "lista OK"
 grep -qiE 'SHARED-INFRA|infra transversal' scaffold/.claude/skills/new-module/SKILL.md && echo "new-module aponta OK"
 grep -qiE 'SHARED-INFRA|infra transversal' scaffold/apps/api/src/app.module.ts && echo "app.module aponta OK"
-grep -rniE 'mik|thor|cfop|payable|titulo|tesouraria|faturamento' scaffold/apps/api/src/SHARED-INFRA.README.md || echo "sem vazamento"
+grep -rniE '<termos-da-origem>' scaffold/apps/api/src/SHARED-INFRA.README.md || echo "sem vazamento"
 mkdocs build --strict >/dev/null 2>&1 && echo "mkdocs PASS" || echo FAIL; rm -rf site
 ```
 - [ ] **Step 5: Commit** `fix(scaffold): infra transversal por receita (SHARED-INFRA + passo no new-module)`.
@@ -124,7 +124,7 @@ mkdocs build --strict >/dev/null 2>&1 && echo "raiz PASS"; rm -rf site; (cd scaf
 ```bash
 cd C:/project/wk/harness-model
 mkdocs build --strict >/dev/null 2>&1 && echo "raiz PASS"; rm -rf site; (cd scaffold && mkdocs build --strict >/dev/null 2>&1 && echo "scaffold PASS"; rm -rf site)
-grep -rniE '\b(mik|thor|cfop|payable|tesouraria|faturamento)\b' scaffold/.claude scaffold/apps/api/src/SHARED-INFRA.README.md .claude/skills/init/SKILL.md | grep -v agnosticism-auditor || echo "sem vazamento"
+grep -rniE '\b(<termos-da-origem>)\b' scaffold/.claude scaffold/apps/api/src/SHARED-INFRA.README.md .claude/skills/init/SKILL.md | grep -v agnosticism-auditor || echo "sem vazamento"
 ```
 - [ ] **Step 2:** Final review independente sobre `main..HEAD` (cobre os 17 achados? algum fix introduziu incoerência? project-relative/zero-negócio mantidos?).
 - [ ] **Step 3:** Merge em `main` + push (`finishing-a-development-branch` → opção merge + `git push`).

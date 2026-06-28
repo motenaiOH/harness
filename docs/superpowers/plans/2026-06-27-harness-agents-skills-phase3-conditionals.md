@@ -208,7 +208,7 @@ Expected: `wire check done` sem FALTA, `promovidos OK`, contagens `scaffold/`=0 
 cd C:/project/wk/harness-model
 ls scaffold/.claude/agents/   # architect, harness-reviewer, qa, data, sre-devsecops, ui-ux, researcher, product (8)
 mkdocs build --strict >/dev/null 2>&1 && echo "raiz PASS"; rm -rf site; (cd scaffold && mkdocs build --strict >/dev/null 2>&1 && echo "scaffold PASS"; rm -rf site)
-grep -rniE '\b(mik|thor|cfop|payable|tesouraria|faturamento)\b' scaffold/.claude scaffold/checklists/data-layer-review.md scaffold/checklists/operational-readiness.md scaffold/checklists/research-rigor.md scaffold/checklists/ui-ux-review.md scaffold/checklists/product-slice.md || echo "fase sem vazamento"
+grep -rniE '\b(<termos-da-origem>)\b' scaffold/.claude scaffold/checklists/data-layer-review.md scaffold/checklists/operational-readiness.md scaffold/checklists/research-rigor.md scaffold/checklists/ui-ux-review.md scaffold/checklists/product-slice.md || echo "fase sem vazamento"
 ```
 Expected: 8 agents, ambos mkdocs PASS, `fase sem vazamento`.
 - [ ] **Step 3:** Se houver ajuste, corrija + commit; senão a fase fecha nos commits das Tasks 1-6.

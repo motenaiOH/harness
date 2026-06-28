@@ -13,7 +13,7 @@
 ## Como se "testa" (igual à Fase 1)
 
 1. **Estrutural** — `grep` confirma frontmatter (`name`/`description`/`tools`) e seções.
-2. **Anti-vazamento** — `grep -rniE 'mik|thor|cfop|payable|titulo|tesouraria|faturamento'` retorna vazio (`author`→"thor" é falso-positivo; filtre).
+2. **Anti-vazamento** — `grep -rniE '<termos-da-origem>'` retorna vazio (`author`→"thor" é falso-positivo; filtre).
 3. **Project-relative** — `grep -c 'scaffold/' <arquivo>` = 0.
 4. **Dogfood seca** — raciocinar o que o agente FARIA sobre a feature-exemplo `widget` (não dá pra invocar ao vivo mid-sessão).
 5. **Não-regressão** — `mkdocs build --strict` (raiz + scaffold) PASS.
@@ -86,7 +86,7 @@ grep -qE '^name: harness-reviewer' scaffold/.claude/agents/harness-reviewer.md &
 grep -qiE 'regra de depend|escopo|contract-first|CQRS' scaffold/.claude/agents/harness-reviewer.md && echo "regras OK"
 grep -qi 'CLAUDE.md' scaffold/.claude/agents/harness-reviewer.md && echo "cita CLAUDE.md OK"
 grep -c 'scaffold/' scaffold/.claude/agents/harness-reviewer.md   # 0
-grep -rniE 'mik|thor|cfop|payable|titulo|tesouraria|faturamento' scaffold/.claude/agents/harness-reviewer.md scaffold/checklists/harness-code-review.md || echo "sem vazamento"
+grep -rniE '<termos-da-origem>' scaffold/.claude/agents/harness-reviewer.md scaffold/checklists/harness-code-review.md || echo "sem vazamento"
 mkdocs build --strict >/dev/null 2>&1 && echo "mkdocs PASS" || echo FAIL; rm -rf site
 ```
 Expected: `frontmatter OK (read-only)`, `regras OK`, `cita CLAUDE.md OK`, `0`, `sem vazamento`, `mkdocs PASS`.
@@ -157,7 +157,7 @@ grep -qE '^name: qa' scaffold/.claude/agents/qa.md && echo "frontmatter OK"
 grep -qiE 'rastreabilidade|adequa|mutação' scaffold/.claude/agents/qa.md && echo "conteúdo OK"
 grep -qiE 'não roda|hooks rodam|testing-strategy' scaffold/.claude/agents/qa.md && echo "distinções OK"
 grep -c 'scaffold/' scaffold/.claude/agents/qa.md   # 0
-grep -rniE 'mik|thor|cfop|payable|titulo|tesouraria|faturamento' scaffold/.claude/agents/qa.md scaffold/checklists/qa-test-adequacy.md || echo "sem vazamento"
+grep -rniE '<termos-da-origem>' scaffold/.claude/agents/qa.md scaffold/checklists/qa-test-adequacy.md || echo "sem vazamento"
 mkdocs build --strict >/dev/null 2>&1 && echo "mkdocs PASS" || echo FAIL; rm -rf site
 ```
 Expected: `frontmatter OK`, `conteúdo OK`, `distinções OK`, `0`, `sem vazamento`, `mkdocs PASS`.
@@ -236,7 +236,7 @@ cd C:/project/wk/harness-model
 mkdocs build --strict >/dev/null 2>&1 && echo "raiz PASS"; rm -rf site
 (cd scaffold && mkdocs build --strict >/dev/null 2>&1 && echo "scaffold PASS"; rm -rf site)
 ls scaffold/.claude/agents/   # esperado: architect.md, harness-reviewer.md, qa.md
-grep -rniE '\b(mik|thor|cfop|payable|tesouraria|faturamento)\b' scaffold/.claude scaffold/checklists/harness-code-review.md scaffold/checklists/qa-test-adequacy.md || echo "fase sem vazamento"
+grep -rniE '\b(<termos-da-origem>)\b' scaffold/.claude scaffold/checklists/harness-code-review.md scaffold/checklists/qa-test-adequacy.md || echo "fase sem vazamento"
 ```
 Expected: `raiz PASS`, `scaffold PASS`, os 3 agents listados, `fase sem vazamento`.
 

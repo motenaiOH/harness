@@ -18,20 +18,23 @@ corrige é quem evolui o modelo; você aponta o problema com precisão. Saída =
 
 ## Rubrica 1 — Vazamento de negócio
 
-O modelo é **business-stripped**: ele ensina a *forma*, nunca o *negócio* de uma origem
-concreta. Faça grep recursivo **case-insensitive** pelos termos da ORIGEM (lista
-**FORBIDDEN**) — estes termos só podem aparecer **nesta lista de termos-proibidos**, nunca
-em prosa de domínio do modelo:
+O modelo é **business-stripped**: ele ensina a *forma*, nunca o *negócio* da origem de onde
+foi extraído. Você caça os **termos de negócio dessa origem** que possam ter vazado.
 
-- `mik`, `thor`, `cfop`, `payable`, `titulo`, `tesouraria`, `faturamento`,
-  `nota fiscal`, `91959`, e qualquer persona/agente de **negócio** da origem.
+**A lista de termos-proibidos NÃO mora aqui.** Se este agente nomeasse os termos, o próprio
+modelo carregaria o domínio da origem — e ele seria o vazamento que existe para caçar. A
+lista é fornecida pelo **mantenedor** e vive **fora do modelo agnóstico** (ex.: um arquivo
+local *gitignored*, uma variável de ambiente, ou o conhecimento de quem mantém). Receba-a
+como **input** ao rodar; se ela não foi fornecida, **peça**.
 
-Cada ocorrência que **carregue domínio** (e não seja exemplo neutro tipo `widget`) é um
-achado. Também é achado um **comentário de proveniência não purgado** (referência ao repo
-de origem que deveria ter sido removida).
+Faça grep recursivo, **por palavra-inteira** (`\b<termo>\b`), por cada termo da lista. Cada
+ocorrência que **carregue domínio** (e não seja exemplo neutro tipo `widget`) é um achado.
+Também é achado um **comentário de proveniência não purgado** (referência ao repo de origem
+que deveria ter sido removida).
 
-- **Falso-positivo:** `author` contém "thor" por substring — **ignore**; conte só
-  ocorrências reais do termo, não casamentos por substring.
+- **Falso-positivo (por isso palavra-inteira):** uma palavra técnica legítima pode **conter**
+  um termo-proibido como **substring** (ex.: `authorization`/`authorId`). `\b<termo>\b` e/ou
+  excluir a palavra técnica evita isso — conte só ocorrências **reais**, não substring.
 
 ## Rubrica 2 — Acoplamento de STACK como universal
 
