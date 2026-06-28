@@ -38,7 +38,8 @@ controller passa `user.tenant`/`user.id` ao use-case. Um campo `tenant` vindo do
 ## 1. `auth/` — guard de identidade + principal autenticado
 
 A espinha (`app.module.ts`) registra `JwtAuthGuard` como `APP_GUARD` e o controller
-injeta o principal via `@CurrentUser`. Materialize os quatro arquivos:
+injeta o principal via `@CurrentUser`. Materialize os cinco arquivos (incluindo
+`common/public.decorator.ts`, que o guard usa para liberar `/health`):
 
 ```ts
 // auth/authenticated-user.ts
@@ -67,26 +68,51 @@ export const CurrentUser = createParamDecorator(
 ```
 
 ```ts
+// common/public.decorator.ts
+// Marca uma rota/handler como público (sem Bearer). O JwtAuthGuard global lê esta
+// metadata via Reflector e pula a verificação. Usado em /health (o healthcheck do
+// Docker não carrega token).
+import { SetMetadata } from "@nestjs/common";
+
+export const IS_PUBLIC_KEY = "isPublic";
+export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
+```
+
+```ts
 // auth/jwt-auth.guard.ts
 // Guard global (APP_GUARD). Verifica o Bearer, fixa iss/aud/alg, e popula
-// request.user com o AuthenticatedUser derivado dos claims VERIFICADOS.
+// request.user com o AuthenticatedUser derivado dos claims VERIFICADOS. Rotas
+// marcadas @Public() (ex.: /health) são liberadas via Reflector.
 import {
   CanActivate,
   ExecutionContext,
   Injectable,
   UnauthorizedException,
 } from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
 import { JwtService } from "@nestjs/jwt";
 import type { AuthenticatedUser } from "./authenticated-user";
+import { IS_PUBLIC_KEY } from "../common/public.decorator";
 
 // The standard HTTP bearer credential header (Node lowercases header names).
 const BEARER_HEADER = "authorization";
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
-  constructor(private readonly jwt: JwtService) {}
+  constructor(
+    private readonly jwt: JwtService,
+    private readonly reflector: Reflector,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    // @Public() routes (e.g. /health) skip auth entirely — checked on both the
+    // handler and the controller class so a class-level @Public() also applies.
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (isPublic) return true;
+
     const request = context.switchToHttp().getRequest();
     const header: string | undefined = request.headers?.[BEARER_HEADER];
     const token = header?.startsWith("Bearer ") ? header.slice(7) : undefined;
@@ -94,10 +120,11 @@ export class JwtAuthGuard implements CanActivate {
 
     try {
       // Pin algorithm/issuer/audience — never accept "alg: none" or an unbounded token.
+      // Env names match config/env.schema.ts (the source of truth): JWT_ISSUER / JWT_AUDIENCE.
       const claims = await this.jwt.verifyAsync(token, {
         algorithms: ["HS256"],
-        issuer: process.env.AUTH_ISS,
-        audience: process.env.AUTH_AUD,
+        issuer: process.env.JWT_ISSUER,
+        audience: process.env.JWT_AUDIENCE,
       });
       // Escopo vem do claim verificado, nunca do input.
       const user: AuthenticatedUser = {
@@ -117,13 +144,15 @@ export class JwtAuthGuard implements CanActivate {
 ```ts
 // auth/auth.module.ts
 // Registra o JwtService que o guard usa. O guard em si é registrado como
-// APP_GUARD no app.module.ts (ordem: throttler antes de auth).
+// APP_GUARD no app.module.ts (ordem: throttler antes de auth). O `Reflector` que o
+// guard injeta vem do Nest core — não precisa ser provido aqui.
+// AUTH_API_SECRET é o segredo HS256 compartilhado com o web (ver config/env.schema.ts).
 import { Module } from "@nestjs/common";
 import { JwtModule } from "@nestjs/jwt";
 import { JwtAuthGuard } from "./jwt-auth.guard";
 
 @Module({
-  imports: [JwtModule.register({ secret: process.env.AUTH_SECRET })],
+  imports: [JwtModule.register({ secret: process.env.AUTH_API_SECRET })],
   providers: [JwtAuthGuard],
   exports: [JwtModule, JwtAuthGuard],
 })
@@ -219,7 +248,7 @@ import { FEATURE_EXCHANGE } from "@app/contracts";
 @Module({
   imports: [
     RabbitMQModule.forRoot({
-      uri: process.env.RABBITMQ_URL!,
+      uri: process.env.RABBITMQ_URI!,
       exchanges: [{ name: FEATURE_EXCHANGE, type: "topic" }],
       connectionInitOptions: { wait: true },
     }),
@@ -249,8 +278,10 @@ sem ela o `docker compose up --wait` nunca fica `healthy`.
 // modules/health/health.controller.ts
 import { Controller, Get, VERSION_NEUTRAL } from "@nestjs/common";
 import { ApiOkResponse, ApiTags } from "@nestjs/swagger";
+import { Public } from "../../common/public.decorator";
 
 @ApiTags("health")
+@Public() // libera do JwtAuthGuard global — o healthcheck do Docker não carrega Bearer.
 @Controller({ path: "health", version: VERSION_NEUTRAL })
 export class HealthController {
   @Get()
@@ -270,9 +301,10 @@ import { HealthController } from "./health.controller";
 export class HealthModule {}
 ```
 
-> O `JwtAuthGuard` é global; `/health` precisa ser **público**. Marque-o com um
-> `@Public()` (metadata que o guard checa) ou exclua o caminho `health` no guard —
-> escolha um e seja consistente. O healthcheck não carrega Bearer.
+> O `JwtAuthGuard` é global; `/health` precisa ser **público**, senão o guard
+> devolve 401 e o `docker compose up --wait` nunca fica `healthy`. Marque o
+> controller com `@Public()` (decorator da seção 1, em `common/public.decorator.ts`;
+> o guard checa essa metadata via `Reflector`). O healthcheck não carrega Bearer.
 
 ---
 
@@ -306,13 +338,60 @@ export class ZodValidationPipe<T> implements PipeTransform {
 
 ---
 
+## 7. `swagger.ts` — `buildOpenApiDocument(app)` (OBRIGATÓRIO, sempre)
+
+Diferente dos demais, **este não é opcional**: `main.ts` **sempre** importa
+`./swagger` (`buildOpenApiDocument`) — independe da fatia ser síncrona ou assíncrona.
+Sem materializar este leaf o typecheck quebra logo de cara (import inexistente). Monta
+o `DocumentBuilder`/`SwaggerModule` e exporta o builder usado tanto pelo runtime (em
+`main.ts`) quanto pelo gate de drift offline (que chama `configureApp` + este builder
+sem subir conexões — por isso ele NÃO faz `app.init()` nem aplica helmet).
+
+```ts
+// swagger.ts
+import type { INestApplication } from "@nestjs/common";
+import { DocumentBuilder, SwaggerModule, type OpenAPIObject } from "@nestjs/swagger";
+
+// Builder compartilhado por runtime (main.ts) e pelo gate de drift offline. Mantenha-o
+// PURO (sem app.init()/helmet) para que offline == runtime.
+export function buildOpenApiDocument(app: INestApplication): OpenAPIObject {
+  const config = new DocumentBuilder()
+    .setTitle("app-api")
+    .setDescription("HTTP contract for the API BFF")
+    .setVersion("1.0")
+    .addBearerAuth()
+    .build();
+  return SwaggerModule.createDocument(app, config);
+}
+```
+
+> O snapshot `openapi.json` (gate de drift) é gerado por `pnpm openapi:generate`, que
+> reusa este mesmo builder offline. Todo `@Query()`/`@Param()` precisa de decorator
+> Swagger explícito para offline == runtime.
+
+---
+
+## 8. `worker.ts` + `worker/*` — SÓ na variante assíncrona (write-path B)
+
+`worker.ts` e suas folhas (`worker/db`, `worker/persist.handler`) são o **segundo
+runtime role** do image e existem **apenas** no write-path assíncrono. Numa fatia/
+instância **síncrona** (read-only ou write inline) eles não se aplicam: **remova
+`worker.ts` (e `worker/*`)** ou deixe-o como stub sem os imports de `./worker/*` —
+senão o typecheck falha em folhas inexistentes (`./worker/db`, `./worker/persist.handler`).
+Na variante assíncrona, materialize-os junto com `messaging/` (seção 4) e `cache/`
+(seção 3, se houver caching no write-path).
+
+---
+
 ## Checklist de materialização (1ª fatia)
 
 1. Liste os imports transversais que a SUA 1ª fatia realmente faz (cheque o
    `app.module.ts` e o `<feature>.module.ts` da fatia).
 2. Para cada um, copie o esqueleto correspondente acima e ajuste à stack/contrato.
-3. **Pule** os que a fatia não usa: read-only síncrona não materializa `messaging/`
+3. **Sempre** materialize `swagger.ts` (seção 7) — `main.ts` o importa em qualquer
+   variante. Numa fatia **síncrona**, remova/stube `worker.ts` (seção 8).
+4. **Pule** os que a fatia não usa: read-only síncrona não materializa `messaging/`
    nem `cache/`.
-4. Garanta que o token/símbolo bate com o que os adapters importam (`DRIZZLE`,
-   `CachePort`, `@CurrentUser`, `AuthenticatedUser`, `ZodValidationPipe`).
-5. Build verde antes de seguir para as folhas da feature.
+5. Garanta que o token/símbolo bate com o que os adapters importam (`DRIZZLE`,
+   `CachePort`, `@CurrentUser`, `AuthenticatedUser`, `ZodValidationPipe`, `IS_PUBLIC_KEY`).
+6. Build verde antes de seguir para as folhas da feature.
