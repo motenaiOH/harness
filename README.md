@@ -227,6 +227,16 @@ Resumo:
    [`checklists/definition-of-done.md`](checklists/definition-of-done.md) e
    atualizando `docs/how-to/current-state.md` na **mesma** iteração.
 
+## Evoluindo este modelo
+
+Ao **alterar o próprio harness-model** (não um projeto instanciado), rode o agente
+`agnosticism-auditor` sobre o **diff** da mudança. Ele garante que nada de **negócio**
+da origem vazou e que specifics de **stack** (NestJS/Next/…) e de **forma** (CQRS,
+presentation única, LLM) seguem marcados como **exemplo/condicional**, não como verdade
+universal. Esse agente vive em `.claude/agents/` do repo do modelo e **não é copiado**
+pelo `init` — assim como este `README.md` top-level — porque audita o modelo, não o
+produto gerado.
+
 ## Comandos (exemplo, ajuste ao seu scaffold)
 
 Monorepo Turborepo + pnpm (Node 22). Da raiz:
