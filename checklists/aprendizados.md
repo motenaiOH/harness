@@ -16,6 +16,19 @@ mecânico, copiável para qualquer projeto que adote este harness.
       com `--incremental`, o `tsc` escreve `tsbuildinfo` **fora** de `dist` e depois pula o
       emit após `dist` ser limpo → `dist` vazio. O `.dockerignore` também exclui
       `**/*.tsbuildinfo` para um buildinfo velho não envenenar a imagem.
+- [ ] **Chave-comentário `"//"` em config JSON só é segura onde a ferramenta a tolera.**
+      É um idiom tentador (config auto-documentada), mas cada ferramenta reage diferente —
+      e o dogfood bateu nisso **várias vezes**. Mapa do que vale:
+      - **OK (ignora em silêncio):** `package.json` (convenção npm), e tsconfig **no nível
+        raiz** (`tsc` aceita chaves desconhecidas na raiz — mas **TS5025 dentro de
+        `compilerOptions`**: lá a chave `"//"` quebra o typecheck).
+      - **QUEBRA / ruído:** `turbo.json` (turbo 2.x → `turbo_json_parse_error`, derruba
+        **todo** `turbo run`); Prettier (`.prettierrc` JSON emite `[warn] Ignored unknown
+        option` em cada run — use `prettier.config.cjs` com comentário JS de verdade);
+        release-please-config e afins com `$schema` estrito.
+      - **Regra:** comentário mora **junto, no formato que a ferramenta entende** — `//`/`#`
+        em arquivo JS/YAML; para config JSON estrito, mova o racional para o doc/workflow
+        que o consome, não para uma chave `"//"`. Configs **strict não toleram lixo**.
 - [ ] **Princípio: install reprodutível com lockfile congelado** — lockfile defasado
       **falha** o build em vez de resolver versões novas silenciosamente
       (ex.: `pnpm install --frozen-lockfile`).
