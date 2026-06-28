@@ -58,6 +58,17 @@ agente `architect` (que produz um ADR) e, quando a fase de papéis existir, o pa
 **Dados** para schema/agregado/read-model. A postura síncrono×CQRS mora no `CLAUDE.md` —
 aponte para lá, não a reescreva aqui.
 
+### 2b. Infra transversal (1ª fatia): materializar os imports compartilhados
+
+Se os imports compartilhados que a espinha faz (`auth/`, `infrastructure/database/drizzle`,
+`infrastructure/cache/redis`, `infrastructure/messaging`, `modules/health`,
+`common/zod-validation.pipe`) **ainda não existem no projeto**, materialize-os por
+`apps/api/src/SHARED-INFRA.README.md` — **só os que ESTA fatia exige**. Eles não vêm
+prontos no scaffold (são por receita) e são compartilhados por todos os bounded
+contexts, então a 1ª fatia os cria e as seguintes apenas reusam. Uma fatia read-only
+síncrona (write-path A) não precisa de `messaging/` nem `cache/`; pule-os. Sem esse
+passo, a espinha importa módulos inexistentes e a fatia **não builda**.
+
 ### 3. Materializar as folhas (renomeando, seguindo os READMEs)
 
 Para cada camada, crie os arquivos descritos no README correspondente, renomeando os

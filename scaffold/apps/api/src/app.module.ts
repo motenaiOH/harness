@@ -7,6 +7,11 @@
  * NOT typecheck until those leaves exist — it shows how the bounded contexts
  * join into one deploy, not finished code. See the root README "Status do
  * scaffold" and `docs/how-to/replicate-this-harness.md`.
+ *
+ * INFRA TRANSVERSAL (auth/drizzle/redis/messaging/health) — os módulos
+ * transversais importados abaixo NÃO vêm prontos no scaffold: são materializados
+ * na 1ª fatia por `apps/api/src/SHARED-INFRA.README.md` (por receita, só os que a
+ * fatia exige). As fatias seguintes apenas os reusam.
  */
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";

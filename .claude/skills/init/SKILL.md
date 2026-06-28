@@ -164,6 +164,11 @@ barato — sem ele a continuidade do projeto não fecha.
 
 ### 9. Validar (gates do DoD)
 
+A **1ª fatia** do projeto materializa a **infra transversal**
+(auth/drizzle/redis/messaging/health/zod-pipe) via `scaffold/apps/api/src/SHARED-INFRA.README.md`
+— só os módulos que a fatia exige — **antes** do primeiro build verde; sem eles a
+espinha importa módulos inexistentes e não compila.
+
 Prove que o projeto bootstrapado roda — evidência, não afirmação:
 
 - `pnpm install` (instala o husky via script `prepare` — o enforço local nasce aqui);
