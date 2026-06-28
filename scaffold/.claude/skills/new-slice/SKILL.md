@@ -90,6 +90,13 @@ código) quando a fatia precisa de um **módulo/bounded context novo**. Se a fat
 a skill **`new-presentation`** em vez do `new-module`. Para fatias com várias tarefas
 independentes, orquestre com `superpowers:subagent-driven-development`.
 
+> **`new-module` e `new-presentation` NÃO são mutuamente exclusivos.** Uma fatia pode usar
+> **os dois**: a **1ª fatia** de um contexto tipicamente materializa um **módulo novo**
+> (`new-module`) **E** sua **1ª presentation** (o canal/borda que expõe o use-case recém-
+> criado). Use `new-module` para nascer o módulo e `new-presentation` quando, depois, outra
+> fatia só acrescenta um canal sobre use-cases que já existem — mas nada impede que ambos
+> ocorram na mesma fatia.
+
 > Se a fatia **toca schema/agregado/migração/read-model**, a matriz acorda **Dados**:
 > **invoque o agente `data`** (modelagem, migração segura, read-model, índices/PII). Se
 > **toca uma presentation com UI**, acorda **UI/UX**: **invoque o agente `ui-ux`**. Ambos
@@ -124,6 +131,14 @@ evidência** — não afirme "passou" sem a saída do comando. Só então:
 
 A fatia só está **pronta** quando os três acima refletem o estado real.
 
+> **Exceção consciente — modo "scaffolding / dry-run".** Para a **1ª fatia** ou uma
+> **exploração**, é aceitável **materializar a estrutura SEM garantir build verde** —
+> **DESDE QUE** isso seja registrado como **follow-up explícito** em
+> `docs/how-to/current-state.md` (ex.: "estrutura X criada em dry-run; build verde pendente").
+> Isso **não enfraquece o gate como regra**: é uma exceção pontual e rastreada. O gate normal
+> (`superpowers:verification-before-completion`, com a **evidência colada**) **volta a valer**
+> na **fatia seguinte** e **antes do merge** — nada vai para `main` sem ele.
+
 ## Conflito entre lentes
 
 - **Objeção bloqueante** (ex.: reviewer/QA reprova) → **volta pro build** (passo 4); refaz
@@ -135,16 +150,23 @@ A fatia só está **pronta** quando os três acima refletem o estado real.
 
 ## Degradação graciosa (princípio)
 
-**Hoje TODAS as lentes (papéis) da matriz E todas as skills por-projeto existem.** Existem
-de fato: a **matriz** (`.claude/convocation-matrix.md`), os **8 agentes** — **`architect`**,
-**`qa`**, **`harness-reviewer`**, **`data`**, **`sre-devsecops`**, **`ui-ux`**,
-**`researcher`** e **`product`** — e as skills **`new-module`**, **`new-presentation`**,
-**`new-adr`** e **`status`**. Nenhuma lente nem skill por-projeto fica pendente: a triagem
-acorda o papel e o passo correspondente **invoca o agente/skill real**.
+**As lentes (papéis) da matriz E as skills por-projeto existem.** Existem de fato: a
+**matriz** (`.claude/convocation-matrix.md`), os **8 agentes** — **`architect`**, **`qa`**,
+**`harness-reviewer`**, **`data`**, **`sre-devsecops`**, **`ui-ux`**, **`researcher`** e
+**`product`** — e as skills **`new-module`**, **`new-presentation`**, **`new-adr`** e
+**`status`**. Numa **sessão real aberta no projeto**, os agentes de `.claude/agents/` estão
+**registrados e invocáveis**: a triagem acorda o papel e o passo correspondente **invoca o
+agente/skill real**.
+
+**Fallback explícito quando uma lente não puder ser invocada** (ex.: um ambiente onde o
+agente não está registrado, ou uma execução aninhada): **atue pelo checklist-companion dele**
+— `checklists/<agente>.md` — percorrendo o checklist À MÃO **e anote** no plano que a lente
+rodou pelo companion, não pelo agente. As **lentes existem**; se alguma **não puder ser
+invocada num ambiente**, o **checklist-companion é o fallback** — a degradação graciosa
+cobre exatamente esse caso.
 
 O **princípio** da degradação graciosa segue valendo como regra geral: se um dia uma peça
-**faltar**, **anote a pendência no plano e SIGA — sem travar**. A ausência de uma peça
-**nunca** bloqueia a fatia; ela vira uma nota explícita e o cuidado manual cobre o
-essencial até a peça nascer. Hoje, porém, **nada por-projeto falta** — o único item de
-fase futura é o `agnosticism-auditor` (manutenção do próprio modelo, não roda no projeto
-instanciado).
+**faltar**, **anote a pendência no plano e SIGA — sem travar**. A ausência (ou
+inacessibilidade) de uma peça **nunca** bloqueia a fatia; ela vira uma nota explícita e o
+checklist-companion / cuidado manual cobre o essencial. O único item de fase futura é o
+`agnosticism-auditor` (manutenção do próprio modelo, não roda no projeto instanciado).

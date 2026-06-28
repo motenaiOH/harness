@@ -51,6 +51,12 @@ monorepo, o `.claude/` de processo (agents + skills + `convocation-matrix.md`), 
 `packages/`, o `docs/` **seed**, os companions em `checklists/`, compose, CI e demais
 andaimes. É a espinha — o esqueleto que os passos seguintes preenchem.
 
+**Crie o diretório `docs/superpowers/plans/`** no projeto (com um `.gitkeep` ou um
+`README.md` curto explicando o papel). O `new-slice` o trata como **fonte de verdade do
+progresso** — passo 0 (retomada) procura planos com caixas abertas ali, e passo 6 (DoD)
+marca as caixas `[x]` ali — mas ele não vem do scaffold; sem este diretório a retomada não
+tem onde olhar.
+
 ### 2. Copiar a metodologia (raiz do modelo → raiz do projeto)
 
 A metodologia mora na **raiz do modelo**, **não** em `scaffold/`. Copie para a raiz do
