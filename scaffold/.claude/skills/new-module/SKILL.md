@@ -114,6 +114,9 @@ arquivo quanto a de prosa apontam para o mesmo nome real:
 - **Contrato** — em `packages/contracts` defina **antes** o esqueleto que o use-case,
   o worker (se variante B) e a presentation importam (DTOs zod + eventos/routing keys).
   **API First:** o contrato vem antes da implementação.
+- **Cobertura (gate da DoD):** ao materializar a 1ª folha de `domain`/`application`,
+  **descomente o bloco de `coverage.thresholds` (≥80%) em `apps/api/vitest.config.ts`** —
+  ele vem comentado no scaffold vazio e, sem isso, a 1ª fatia pode shippar <80% sem o gate disparar.
 
 ### 4. Ligar o composition root
 

@@ -36,6 +36,10 @@ The scope/identity claim in that API JWT is taken from the **authenticated
 session**, never from request input — the API re-verifies it. Keep all calls to the
 API flowing through the proxy route so this boundary holds for every request.
 
+> **Testing gotcha (`lib/api-token.ts`):** put `// @vitest-environment node` at the
+> top of that spec — `jose`'s WebCrypto rejects a `Uint8Array` from the jsdom realm,
+> so the JWT-minting test must run in the **node** environment, not jsdom.
+
 > **Another presentation that needs the same boundary** (e.g. a mobile app with
 > its own server-side proxy) replicates this `lib/api-token.ts` + proxy-route
 > pattern in its sibling app. The **API secret is shared with the API**; the
