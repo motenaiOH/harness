@@ -37,6 +37,10 @@ que já nasce com o pyramid de testes, os gates do DoD e o processo de fatia fun
 2. O **escopo** da org para o monorepo (ex.: `@suaorg`), que substitui `@app/*`.
 3. O **nome do primeiro bounded context** (substitui o módulo `feature/`).
 4. A **`<Entity>`** real do primeiro contexto (substitui `<entity>`/`widget`/`<name>`).
+5. O **nome do app/projeto** (substitui o placeholder `<App>`). É **pervasivo**: aparece no
+   `site_name` do `mkdocs.yml`, no `.env.example`, no `"name"` do `package.json` e em
+   headers/docs. O guard anti-vazamento **falha** se sobrar qualquer `<App>` — colha o valor
+   agora, no início, e não depois.
 
 ## Procedimento
 
@@ -61,18 +65,54 @@ projeto, **mesclando** com os companions que já vieram de `scaffold/checklists/
 **não** copie o `docs/` do modelo (use o seed do scaffold) nem o `.claude/` do modelo (use o
 de scaffold).
 
+**Regra de colisão na mescla:** se um arquivo de `checklists/` da **metodologia** colidir de
+nome com um **companion** já vindo de `scaffold/checklists/`, o **companion (scaffold) vence**
+— **não** sobrescreva sem avisar. Hoje os nomes são **disjuntos** (não há colisão), mas a
+regra vale mesmo assim, para o dia em que deixarem de ser.
+
 ### 3. Renomear o escopo do monorepo
 
 Troque `@app/*` → `@suaorg/*` em `package.json`, `pnpm-workspace.yaml`, nos `tsconfig` e em
 todos os imports que referenciam os pacotes internos. O escopo precisa ser consistente para
 o workspace resolver os pacotes compilados.
 
-### 4. Renomear o módulo (primeiro bounded context)
+### 4. Renomear o módulo — **dois eixos independentes** (com casing)
 
-Renomeie o módulo `feature/` para o **primeiro bounded context** real, e substitua os
-placeholders da entidade — `<entity>` / `widget` / `<name>` — pela **`<Entity>`** real, em
-pastas, arquivos, tipos, contratos e testes. Preserve a **linguagem ubíqua**: o termo
-escolhido é o mesmo em código, contrato, docs, Swagger e mensagens de evento.
+São **dois renames distintos**; **não** os colapse no mesmo token:
+
+- **(a) Contexto (bounded context).** Troque `Feature` / `feature` / `FEATURE` / `Features`
+  → o nome do contexto real (ex.: `Billing` / `billing` / `BILLING` / `Billings`),
+  respeitando **a casing por variante**:
+  - `Feature` (PascalCase) → `Billing` (PascalCase);
+  - `feature` (lowercase) → `billing` (lowercase);
+  - `FEATURE` (UPPER) → `BILLING` (UPPER);
+  - `Features` (plural) → `Billings` (plural).
+- **(b) Entidade.** Troque `Widget` / `widget` / `<entity>` / `<name>` → a **`<Entity>`**
+  real (ex.: `Invoice` / `invoice`), com a mesma regra de casing por variante.
+
+Os dois eixos são **independentes**: contexto e entidade podem (e geralmente devem) ser
+nomes diferentes. **Não** renomeie ambos para o mesmo valor.
+
+Renomeie em pastas, arquivos, tipos, contratos e testes. Preserve a **linguagem ubíqua**: o
+termo escolhido é o mesmo em código, contrato, docs, Swagger e mensagens de evento.
+
+**Renomeie por palavra-inteira / identificador — não faça `sed` global cego.** As strings
+`feature` e `widget` podem aparecer como **substring** de identificadores/keywords que **não
+têm relação** com o domínio — por exemplo, a chave `features:` do tema **MkDocs Material**
+viraria `billings:` num replace global cego e **quebraria o tema**. Case por palavra inteira
+(limites de identificador) e **revise cada hit** antes de aceitar.
+
+**Híbridos pós-rename.** Depois de renomear a palavra-interna de `<Feature>`, os `<>` do
+placeholder **sobrevivem**, deixando híbridos como `<Billing>`. Varra por esses híbridos
+`<Billing>`-style e pelos literais `<App>` / `<Feature>` / `<Entity>` restantes, e resolva
+todos para o nome real.
+
+### 4b. Renomear o app/projeto (`<App>`)
+
+Troque o placeholder `<App>` pelo **nome do app/projeto** (pré-requisito 5) em **todos** os
+lugares onde aparece: `site_name` do `mkdocs.yml`, `.env.example`, `"name"` do
+`package.json` e headers/docs. Aplique a mesma regra de **palavra-inteira + revisão de cada
+hit**. O guard (passo 7) falha se sobrar qualquer `<App>`.
 
 ### 5. Passo-0 — decidir a forma (NFR) → primeiro ADR
 
@@ -82,12 +122,30 @@ extrair-serviço ou monólito modular; quais NFRs mandam). O resultado vira o **
 ADR**, criado via a skill **`new-adr`**. Não decida forma no loop principal quando há dono
 para isso.
 
+**Fallback se o `architect` não puder ser invocado** (ex.: `init` rodando fora de uma sessão
+onde o agente está registrado): siga **`checklists/architecture-form-decision.md` À MÃO**,
+percorrendo o formulário de decisão, e escreva o ADR você mesmo — **anotando no próprio ADR**
+que a forma foi decidida pelo procedimento manual, sem o agente.
+
 ### 6. Purgar a proveniência do modelo
 
 Remova os comentários de **proveniência** que só fazem sentido no modelo: instruções do tipo
 "Replace the @app/* scope…", cabeçalhos `SPINE (illustrative)`, notas de "Status do
 scaffold" e qualquer referência que aponte de volta para o modelo. Andaime esquecido no
 código de produção é dívida e confunde quem entra depois.
+
+**Ache os alvos com grep** (não confie na memória):
+
+```bash
+grep -rniE 'SPINE \(illustrative\)|Status do scaffold|Replace the @app/\* scope' .
+```
+
+Costumam estar em: `apps/<app>/src/app.module.ts`, `main.ts`, `worker.ts`,
+`<feature>.module.ts` e na chave `"//"` do `package.json`. Resolva cada hit.
+
+**Exceção — não purgue a proveniência que ENSINA a purga:** a seção de proveniência em
+`checklists/aprendizados.md` documenta *como* purgar e é referência do próprio guard; o
+guard anti-vazamento já **exclui** esse arquivo de si mesmo. Deixe-a intacta.
 
 ### 7. Guard anti-vazamento
 
@@ -97,7 +155,14 @@ no repo; e **(b)** que nenhum placeholder `<App>` / `<Feature>` / `<Entity>` sob
 deveria ser o nome real (escopo, módulo, entidade). Resíduo encontrado → volte ao passo
 correspondente e purgue antes de seguir.
 
-### 8. Validar (gates do DoD)
+### 8. Preencher o `docs/how-to/current-state.md` inicial
+
+Preencha o **`docs/how-to/current-state.md`** seed com o estado real do projeto recém-criado:
+escopo aplicado, primeiro bounded context + `<Entity>`, a decisão de forma do Passo-0 (com o
+ADR) e os follow-ups conhecidos. É o mapa repo-resident de capacidades que garante reinício
+barato — sem ele a continuidade do projeto não fecha.
+
+### 9. Validar (gates do DoD)
 
 Prove que o projeto bootstrapado roda — evidência, não afirmação:
 
