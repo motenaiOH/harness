@@ -19,7 +19,7 @@ tempted to add a branch with a domain decision, it belongs in
 
 | Folder / file | Role |
 |---|---|
-| `http/<name>.controller.ts` | The controller. Routes are under `/v1` (URI versioning set in `bootstrap.ts`). Every endpoint is Swagger-annotated. |
+| `http/__name__.controller.ts` | The controller (`<name>` → real entity name). Routes are under `/v1` (URI versioning set in `bootstrap.ts`). Every endpoint is Swagger-annotated. |
 | `http/dtos/` | `@ApiProperty` mirror classes that feed Swagger metadata, plus the contract zod schemas the `ZodValidationPipe` validates against. |
 
 ## The rules that keep the contract honest

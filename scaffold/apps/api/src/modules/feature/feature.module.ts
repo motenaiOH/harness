@@ -15,11 +15,12 @@ import {
   type Database,
 } from "../../infrastructure/database/drizzle/drizzle.module";
 // Application ports (DI tokens = abstract classes).
-import { CachePort } from "./application/ports/cache.port";
 import { ClockPort } from "./application/ports/clock.port";
-import { EventPublisherPort } from "./application/ports/event-publisher.port";
 import { IdGeneratorPort } from "./application/ports/id-generator.port";
 import { MetricsPort } from "./application/ports/metrics.port";
+// CQRS-lite (variant B) ports — only needed when the async write-path is active.
+// import { CachePort } from "./application/ports/cache.port";
+// import { EventPublisherPort } from "./application/ports/event-publisher.port";
 // Domain port.
 import { WidgetRepository } from "./domain/ports/widget.repository.port";
 // Use-cases (plain classes — instantiated via useFactory, NOT decorated).
@@ -30,9 +31,10 @@ import { OutputPolicyValidator } from "./application/guardrails/output-policy-va
 // Infrastructure adapters (each `extends` its port).
 import { SystemClock } from "./infrastructure/adapters/system-clock";
 import { UuidGenerator } from "./infrastructure/adapters/uuid-generator";
-import { RedisCacheAdapter } from "./infrastructure/cache/redis-cache.adapter";
-import { RabbitMqEventPublisher } from "./infrastructure/messaging/rabbitmq.publisher";
 import { DrizzleWidgetRepository } from "./infrastructure/persistence/widget.repository";
+// CQRS-lite (variant B) adapters — only needed when the async write-path is active.
+// import { RedisCacheAdapter } from "./infrastructure/cache/redis-cache.adapter";
+// import { RabbitMqEventPublisher } from "./infrastructure/messaging/rabbitmq.publisher";
 import { OtelMetricsRecorder } from "./infrastructure/observability/otel-metrics-recorder";
 // Presentation.
 import { FeatureController } from "./presentation/http/feature.controller";
@@ -59,25 +61,35 @@ import { FeatureController } from "./presentation/http/feature.controller";
   exports: [ExecuteFeatureUseCase],
   providers: [
     // ── Use-cases (pure → useFactory) ─────────────────────────────────────────
-    // CQRS-lite variant (B): the use-case publishes an event; a worker persists.
+    // Direct-write mode — variante A (escrita direta), the DEFAULT and síncrono
+    // posture: ExecuteFeatureUseCase is wired with the REPOSITORY (and only the
+    // ports the direct form needs), WITHOUT EventPublisherPort/CachePort — the
+    // use-case persists IN the request and there is no worker. Matches the typical
+    // ADR of an instance (synchronous by default).
     {
       provide: ExecuteFeatureUseCase,
-      inject: [EventPublisherPort, CachePort, ClockPort, IdGeneratorPort],
+      inject: [WidgetRepository, ClockPort, IdGeneratorPort],
       useFactory: (
-        publisher: EventPublisherPort,
-        cache: CachePort,
+        repo: WidgetRepository,
         clock: ClockPort,
         ids: IdGeneratorPort,
-      ) => new ExecuteFeatureUseCase(publisher, cache, clock, ids),
+      ) => new ExecuteFeatureUseCase(repo, clock, ids),
     },
-    // Direct-write mode (DEFAULT): wire ExecuteFeatureUseCase with the repository,
-    // WITHOUT EventPublisherPort/CachePort — the use-case persists in the request
-    // and there is no worker. (Adopt variant B above only under a concrete NFR.)
+    // CQRS-lite variant (B) — ALTERNATIVE, comentado: the use-case publishes an
+    // event and a worker persists. Descomente (e os imports/bindings de
+    // EventPublisherPort/CachePort acima e abaixo) quando um NFR concreto
+    // justificar — picos de escrita, desacoplar latência, fan-out; ver o ADR e o
+    // passo de write-path da skill new-module. Custo: broker, idempotência,
+    // read-your-writes eventual.
     // {
     //   provide: ExecuteFeatureUseCase,
-    //   inject: [WidgetRepository, ClockPort, IdGeneratorPort],
-    //   useFactory: (repo: WidgetRepository, clock: ClockPort, ids: IdGeneratorPort) =>
-    //     new ExecuteFeatureUseCase(repo, clock, ids),
+    //   inject: [EventPublisherPort, CachePort, ClockPort, IdGeneratorPort],
+    //   useFactory: (
+    //     publisher: EventPublisherPort,
+    //     cache: CachePort,
+    //     clock: ClockPort,
+    //     ids: IdGeneratorPort,
+    //   ) => new ExecuteFeatureUseCase(publisher, cache, clock, ids),
     // },
     {
       provide: ListWidgetsUseCase,
@@ -87,10 +99,11 @@ import { FeatureController } from "./presentation/http/feature.controller";
 
     // ── Ports → adapters (useClass) ───────────────────────────────────────────
     { provide: WidgetRepository, useClass: DrizzleWidgetRepository },
-    { provide: EventPublisherPort, useClass: RabbitMqEventPublisher },
-    { provide: CachePort, useClass: RedisCacheAdapter },
     { provide: ClockPort, useClass: SystemClock },
     { provide: IdGeneratorPort, useClass: UuidGenerator },
+    // CQRS-lite (variant B) bindings — descomente junto com a variante B acima.
+    // { provide: EventPublisherPort, useClass: RabbitMqEventPublisher },
+    // { provide: CachePort, useClass: RedisCacheAdapter },
 
     // ── Metrics: best-effort, choose recorder per environment ─────────────────
     // OtelMetricsRecorder no-ops when telemetry is off (see otel.ts), so it is

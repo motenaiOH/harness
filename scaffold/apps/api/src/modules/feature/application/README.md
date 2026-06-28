@@ -10,7 +10,7 @@ no `TestingModule`, no Docker.
 
 | Folder | Role | Example |
 |---|---|---|
-| `use-cases/<name>/` | One class per intent, plus its sibling `*.spec.ts`. `execute(input): Promise<Result>`; `Input`/`Result` are interfaces local to the file. | `ExecuteFeatureUseCase`. |
+| `use-cases/__name__/` | One class per intent (`<name>` → real name), plus its sibling `*.spec.ts`. `execute(input): Promise<Result>`; `Input`/`Result` are interfaces local to the file. | `ExecuteFeatureUseCase`. |
 | `ports/` | Dependencies the use-cases need, as **abstract classes** (Clock, Cache, EventPublisher, IdGenerator, Metrics). These are the orchestrator's deps — distinct from `domain/ports` (the business-core contracts). | `ClockPort`, `EventPublisherPort`. |
 | `guardrails/` | Pure cross-cutting policy (e.g. an output validator). Best-effort: never throws, never mutates. | `OutputPolicyValidator`. |
 

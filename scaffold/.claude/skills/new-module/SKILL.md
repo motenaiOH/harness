@@ -29,6 +29,16 @@ ela aponta para o `CLAUDE.md` e o agente `architect` — não decide por conta p
 2. **`<Entity>`** — o agregado raiz, substitui `<entity>`/`<name>`/`widget` (ex.: `widget`).
 3. Se faltar qualquer um, **pergunte** — não invente domínio.
 
+### Convenção de placeholder (DUAS formas, mesma coisa)
+
+O scaffold usa **dois estilos** para o mesmo placeholder, por um motivo prático: nomes
+de **ARQUIVO** usam `__entity__`/`__name__` (FS-safe — `<>` é problemático em filename,
+sobretudo no Windows), enquanto a **PROSA** (texto, comentários, tipos) usa
+`<App>`/`<Feature>`/`<Entity>`/`<name>`/`<Tenant>`/`<Presentation>`. São o mesmo conceito
+escrito de formas diferentes — ao materializar, **substitua ambas** pelo nome real. Ex.:
+o arquivo `domain/value-objects/__name__.vo.ts` vira `widget-name.vo.ts`, e a prosa que
+o cita como `<name>.vo` também vira `widget-name.vo`.
+
 ## Procedimento
 
 ### 1. Ler os 4 READMEs de camada (fonte de verdade dos blocos)
@@ -71,8 +81,22 @@ passo, a espinha importa módulos inexistentes e a fatia **não builda**.
 
 ### 3. Materializar as folhas (renomeando, seguindo os READMEs)
 
-Para cada camada, crie os arquivos descritos no README correspondente, renomeando os
-placeholders: `<feature>` → nome real, `<entity>`/`<name>`/`widget` → `<Entity>` real.
+Para cada camada, crie os arquivos descritos no README correspondente, renomeando **as
+duas formas** do placeholder (ver "Convenção de placeholder" acima) — tanto a forma de
+arquivo quanto a de prosa apontam para o mesmo nome real:
+
+| Placeholder (arquivo) | Placeholder (prosa) | Vira (ex.: entity = `widget`, feature = `catalog`) |
+|---|---|---|
+| `__entity__` | `<entity>` / `<Entity>` / `widget` | `widget` / `Widget` |
+| `__name__` | `<name>` | `widget` / `widget-name` (conforme o arquivo) |
+| — | `<feature>` / `<Feature>` | `catalog` / `Catalog` |
+
+> **Endpoint/DTO é por fatia, não obrigatoriamente o do README.** O exemplo de rota nos
+> READMEs de camada (`@Post() /feature`, `@Get("items")`, `ExecuteFeatureSchema`) é **UM
+> exemplo** de forma — a sua fatia pode ter seu **próprio** endpoint, schema e DTO. Não
+> precisa reusar `execute`/`items`: nomeie o verbo, a rota e o contrato pelo que a fatia
+> realmente faz. O que se copia é a **forma** (controller fino, validação por `@Body()`,
+> escopo via `@CurrentUser`, Swagger explícito), não os nomes literais do exemplo.
 
 - **`domain`** — `entities/<entity>.entity.ts` (agregado: construtor privado + `create()`),
   `value-objects/<name>.vo.ts` (invariante na criação), `ports/<name>.repository.port.ts`
