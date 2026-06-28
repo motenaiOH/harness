@@ -73,18 +73,14 @@ export const CurrentUser = createParamDecorator(
 import {
   CanActivate,
   ExecutionContext,
-  HttpException,
   Injectable,
+  UnauthorizedException,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import type { AuthenticatedUser } from "./authenticated-user";
 
-// 401 helper. (NestJS also ships a ready-made 401 exception class — either is fine.)
-const Denied = () => new HttpException("unauthenticated", 401);
-
-// The standard HTTP bearer credential header (lowercased by Node), read from
-// `AUTH_HEADER` env so the header name is configurable; default = the bearer header.
-const BEARER_HEADER = (process.env.AUTH_HEADER ?? "auth").concat("orization");
+// The standard HTTP bearer credential header (Node lowercases header names).
+const BEARER_HEADER = "authorization";
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -94,7 +90,7 @@ export class JwtAuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const header: string | undefined = request.headers?.[BEARER_HEADER];
     const token = header?.startsWith("Bearer ") ? header.slice(7) : undefined;
-    if (!token) throw Denied();
+    if (!token) throw new UnauthorizedException();
 
     try {
       // Pin algorithm/issuer/audience — never accept "alg: none" or an unbounded token.
@@ -112,7 +108,7 @@ export class JwtAuthGuard implements CanActivate {
       request.user = user;
       return true;
     } catch {
-      throw Denied();
+      throw new UnauthorizedException();
     }
   }
 }

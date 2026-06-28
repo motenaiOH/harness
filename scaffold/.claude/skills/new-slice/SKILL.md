@@ -160,7 +160,8 @@ agente/skill real**.
 
 **Fallback explícito quando uma lente não puder ser invocada** (ex.: um ambiente onde o
 agente não está registrado, ou uma execução aninhada): **atue pelo checklist-companion dele**
-— `checklists/<agente>.md` — percorrendo o checklist À MÃO **e anote** no plano que a lente
+(o checklist que o próprio arquivo do agente aponta — ex.: o agente `architect` →
+`checklists/architecture-form-decision.md`) percorrendo-o À MÃO **e anote** no plano que a lente
 rodou pelo companion, não pelo agente. As **lentes existem**; se alguma **não puder ser
 invocada num ambiente**, o **checklist-companion é o fallback** — a degradação graciosa
 cobre exatamente esse caso.
