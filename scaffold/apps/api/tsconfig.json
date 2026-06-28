@@ -1,9 +1,9 @@
 {
   "//": "API tsconfig — the real bridge between the app and the shared @app/tsconfig package. Extends the nestjs variant (CJS emit, decorators, ES2023) and adds only app-local settings (paths, include). This config is run with `tsc --noEmit` for typechecking; `nest build` produces the prod dist.",
+  "//rootDir": "Intentionally NO rootDir: this config typechecks files that live OUTSIDE src (test/**, *.config.ts like vitest.config.ts). rootDir + included files outside it = TS6059. rootDir only affects emit, and emit here is `nest build` (with its own config), not this --noEmit pass.",
   "extends": "@app/tsconfig/nestjs.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src",
     "baseUrl": "./",
     "types": ["node"],
 
