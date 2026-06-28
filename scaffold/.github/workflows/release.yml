@@ -24,6 +24,9 @@ jobs:
     steps:
       - uses: googleapis/release-please-action@v5
         with:
-          # Root mode: a single config + manifest at the repo root.
+          # Root mode: a single config + manifest at the repo root (release-type: node).
+          # include-component-in-tag:false in the config keeps plain vX.Y.Z tags (one root
+          # release, not per-package). The config is plain JSON (no comment keys) — its
+          # rationale lives here, next to where release-please is invoked.
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json

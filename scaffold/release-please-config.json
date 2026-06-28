@@ -1,6 +1,5 @@
 {
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
-  "//": "Root-mode release-please (release-type node). Reads Conventional Commits on push to main to open/maintain a Release PR with CHANGELOG + version bump + tag. Packages are private — no publish step. include-component-in-tag:false keeps plain vX.Y.Z tags (single root release, not per-package).",
   "release-type": "node",
   "include-component-in-tag": false,
   "packages": {
